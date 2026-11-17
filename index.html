@@ -94,8 +94,8 @@ input[type=text],input:not([type]),select{width:100%;min-height:40px;padding:6px
 input:hover,select:hover{border-color:var(--line2)}
 input:focus,select:focus{border-color:var(--acc)}
 input::placeholder{color:#71717A}
-select{appearance:none}
-.colL input[type=text],.colR input[type=text],.colR select{background:var(--bg)}
+select{appearance:none;padding-right:30px;background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23A1A1AA' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 10px center}
+.colL input[type=text],.colR input[type=text],.colR select{background-color:var(--bg)}
 
 /* Boutons fins */
 .btn{min-height:40px;padding:0 14px;border-radius:var(--r);border:1px solid var(--line2);
@@ -201,6 +201,9 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 .dlgbody h4{margin:8px 0 0;font-family:var(--mono);font-size:10px;font-weight:500;color:var(--acc);text-transform:uppercase;letter-spacing:.12em}
 .dlgbody p{margin:0;font-size:13px}
 .status{font-family:var(--mono);font-size:12px;color:var(--mut)}
+.acct{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:1px solid var(--line);border-radius:var(--r);padding:8px 10px}
+.acct[hidden]{display:none}
+.acct .who{font-family:var(--mono);font-size:12px;color:var(--mut);flex:1 1 140px;min-width:0;overflow:hidden;text-overflow:ellipsis}
 #toast{position:fixed;left:50%;bottom:calc(60px + env(safe-area-inset-bottom));transform:translate(-50%,8px);
   background:var(--tx);color:#0E0E10;padding:8px 14px;border-radius:var(--r);font-size:13px;font-weight:600;
   opacity:0;pointer-events:none;transition:opacity .15s,transform .15s;z-index:50;max-width:90vw;text-align:center}
@@ -304,6 +307,18 @@ function toast(msg) {
 }
 
 /* ---------- 2. État + persistance ---------- */
+/* ---------- Configuration par défaut ----------
+   Valeurs utilisées tant que tu n'as pas enregistré un réglage dans ⚙.
+   Changer « version » force le navigateur à adopter cette configuration. */
+const CONFIG = {
+  version: 1,
+  provider: 'firebase-google',                 // 'none' | 'firebase-google' | 'supabase' | 'firebase'
+  url: 'https://focale-ced26-default-rtdb.europe-west1.firebasedatabase.app',
+  key: 'AIzaSyCPWftt-vWPaWvzIC9glqSYI-II8Ygvd9w', // clé API web : publique, la sécurité repose sur les règles
+  project: '',                                  // vide = déduit de l'URL
+  row: 'moi'
+};
+
 const LS_KEY = 'focusflow.v1';
 const LS_SYNC = 'focusflow.sync.v1';
 const LS_TAB = 'focusflow.tab';
@@ -376,9 +391,13 @@ function save(touch = true, push = true) {
    create policy "open" on app_state for all using (true) with check (true);
    -- À terme : activer Supabase Auth et filtrer par auth.uid().
 
-   --- Firebase Realtime Database : créer une base, URL du type
-   https://xxx-default-rtdb.europe-west1.firebasedatabase.app
-   et des règles adaptées (".read"/".write" sur /focusflow).
+   --- Firebase + Google (recommandé) : chaque utilisateur n'accède qu'à users/<son uid>.
+   Console Firebase : Authentication > Google activé ; Realtime Database > Règles :
+   { "rules": { "users": { "$uid": {
+       ".read": "$uid === auth.uid", ".write": "$uid === auth.uid" } } } }
+   Le domaine d'hébergement doit figurer dans Authentication > Paramètres > Domaines autorisés.
+
+   --- Firebase « identifiant partagé » (ancien mode) : règles ouvertes sur /focusflow/$id.
    ------------------------------------------------------- */
 const Providers = {
   supabase: {
@@ -414,14 +433,42 @@ const Providers = {
       const r = await fetch(this.endpoint(c), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
       if (!r.ok) throw new Error('Firebase ' + r.status);
     }
+  },
+  'firebase-google': {
+    login: true,
+    need: c => !!c.key && !!projectOf(c),
+    loggedIn: async c => { await Auth.init(c); await Auth.first; return !!Auth.user; },
+    async endpoint(c) {
+      const t = await Auth.user.getIdToken();
+      return `${c.url.replace(/\/$/, '')}/users/${encodeURIComponent(Auth.user.uid)}/state.json?auth=${encodeURIComponent(t)}`;
+    },
+    async pull(c) {
+      const r = await fetch(await this.endpoint(c));
+      if (!r.ok) throw new Error('Firebase ' + r.status + (r.status === 401 ? ' (vérifie les règles de la base)' : ''));
+      return await r.json();
+    },
+    async push(c, data) {
+      const r = await fetch(await this.endpoint(c), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+      if (!r.ok) throw new Error('Firebase ' + r.status + (r.status === 401 ? ' (vérifie les règles de la base)' : ''));
+    }
   }
 };
 
 const Sync = {
-  cfg: (() => { try { return { provider: 'none', url: '', key: '', row: 'moi', ...JSON.parse(localStorage.getItem(LS_SYNC) || '{}') }; } catch (e) { return { provider: 'none', url: '', key: '', row: 'moi' }; } })(),
+  cfg: (() => {
+    const base = { provider: CONFIG.provider, url: CONFIG.url, key: CONFIG.key, row: CONFIG.row, project: CONFIG.project };
+    try {
+      const saved = JSON.parse(localStorage.getItem(LS_SYNC) || 'null');
+      if (saved && saved.cfgVersion === CONFIG.version) return { ...base, ...saved };
+    } catch (e) {}
+    return base;
+  })(),
   timer: null, last: '', busy: false,
-  enabled() { return !!Providers[this.cfg.provider] && !!this.cfg.url; },
-  saveCfg() { localStorage.setItem(LS_SYNC, JSON.stringify(this.cfg)); this.setStatus(this.enabled() ? 'ok' : 'off', this.enabled() ? 'Configurée' : 'Désactivée'); },
+  enabled() {
+    const p = Providers[this.cfg.provider];
+    return !!p && !!this.cfg.url && (!p.need || p.need(this.cfg));
+  },
+  saveCfg() { localStorage.setItem(LS_SYNC, JSON.stringify({ ...this.cfg, cfgVersion: CONFIG.version })); this.setStatus(this.enabled() ? 'ok' : 'off', this.enabled() ? 'Configurée' : 'Désactivée'); },
   setStatus(s, msg = '') {
     this.last = msg;
     const d = $('#syncDot'); if (!d) return;
@@ -438,6 +485,7 @@ const Sync = {
     if (!this.enabled() || this.busy) return;
     const p = Providers[this.cfg.provider]; this.busy = true; this.setStatus('sync', 'Synchronisation…');
     try {
+      if (p.login && !(await p.loggedIn(this.cfg))) { this.setStatus('off', 'Connexion Google requise'); return; }
       const remote = await p.pull(this.cfg);
       const rTime = remote ? Number(remote.updatedAt) || 0 : -1;
       if (remote && rTime > state.updatedAt) {
@@ -448,9 +496,74 @@ const Sync = {
         this.setStatus('ok', 'Envoyé · ' + new Date().toLocaleTimeString('fr-FR'));
       } else this.setStatus('ok', 'À jour · ' + new Date().toLocaleTimeString('fr-FR'));
     } catch (e) { this.setStatus('err', 'Erreur : ' + e.message); }
-    finally { this.busy = false; }
+    finally { this.busy = false; renderAcct(); }
   }
 };
+
+/* ---------- 3b. Connexion Google (Firebase Auth) ----------
+   Le SDK n'est chargé qu'à la demande (fournisseur « Firebase + Google » actif).
+   Les données restent lisibles hors-ligne : seule la synchro a besoin du SDK. */
+const FB_SDK = 'https://www.gstatic.com/firebasejs/10.14.1/';
+const projectOf = c => ((c.project || '').trim()) || ((String(c.url || '').match(/^https?:\/\/([^.]+?)(?:-default-rtdb)?\./) || [])[1] || '');
+
+const Auth = {
+  auth: null, user: null, first: null, sig: '',
+  loadScript(src) {
+    return new Promise((res, rej) => {
+      const el = document.createElement('script');
+      el.src = src; el.onload = res; el.onerror = () => rej(new Error('SDK Firebase injoignable (hors-ligne ?)'));
+      document.head.append(el);
+    });
+  },
+  async init(cfg) {
+    const sig = cfg.key + '|' + projectOf(cfg);
+    if (this.auth) {
+      if (sig !== this.sig) throw new Error('Recharge la page pour appliquer cette configuration');
+      return this.auth;
+    }
+    if (!/^https?:$/.test(location.protocol)) throw new Error('Ouvre l’appli en http(s), pas depuis un fichier local');
+    if (!window.firebase) await this.loadScript(FB_SDK + 'firebase-app-compat.js');
+    if (!firebase.auth) await this.loadScript(FB_SDK + 'firebase-auth-compat.js');
+    const pid = projectOf(cfg);
+    firebase.initializeApp({ apiKey: cfg.key, authDomain: pid + '.firebaseapp.com', projectId: pid });
+    const a = firebase.auth();
+    this.sig = sig;
+    this.first = new Promise(res => {
+      a.onAuthStateChanged(u => {
+        this.user = u; res(); renderAcct();
+        if (u) Sync.run(); else Sync.setStatus('off', 'Connexion Google requise');
+      });
+    });
+    a.getRedirectResult().catch(e => Sync.setStatus('err', 'Connexion : ' + (e.code || e.message)));
+    this.auth = a;
+    return a;
+  },
+  /* À appeler directement depuis un clic : la popup doit naître du geste de l'utilisateur */
+  async signIn() {
+    const p = new firebase.auth.GoogleAuthProvider();
+    try { await this.auth.signInWithPopup(p); }
+    catch (e) {
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') await this.auth.signInWithRedirect(p);
+      else throw e;
+    }
+  },
+  signOut() { return this.auth.signOut(); }
+};
+
+function googleSignIn() {
+  Auth.signIn().catch(e => {
+    if (!/popup-closed|cancelled-popup/.test(e.code || '')) Sync.setStatus('err', 'Connexion : ' + (e.code || e.message));
+  });
+}
+
+function renderAcct() {
+  const box = $('#acct'); if (!box) return;
+  const u = Auth.user;
+  put(box,
+    h('span', { class: 'who' }, u ? 'Connecté · ' + (u.email || u.displayName || u.uid) : Auth.auth ? 'Non connecté' : 'Enregistre la configuration pour activer la connexion'),
+    u ? h('button', { class: 'btn', type: 'button', onclick: () => Auth.signOut() }, 'Se déconnecter')
+      : h('button', { class: 'btn primary', type: 'button', disabled: !Auth.auth, onclick: googleSignIn }, 'Se connecter avec Google'));
+}
 
 /* ---------- 4. Logique métier ---------- */
 const activeProjects = () => state.projects.filter(p => p.active);
@@ -802,10 +915,40 @@ function importData(file) {
   fr.readAsText(file);
 }
 
+const PROVIDER_FIELDS = {
+  'none': [],
+  'firebase-google': [
+    ['url', 'URL de la base', 'text', 'https://xxx-default-rtdb.europe-west1.firebasedatabase.app'],
+    ['key', 'Clé API web (Firebase)', 'text', 'AIza…'],
+    ['project', 'ID du projet (auto si vide)', 'text', 'focale-xxxx']],
+  'supabase': [
+    ['url', 'URL du projet', 'text', 'https://xxxx.supabase.co'],
+    ['key', 'Clé anon', 'password', ''],
+    ['row', 'Identifiant de tes données', 'text', 'moi']],
+  'firebase': [
+    ['url', 'URL de la base', 'text', 'https://xxx-default-rtdb.europe-west1.firebasedatabase.app'],
+    ['key', 'Jeton (facultatif)', 'password', ''],
+    ['row', 'Identifiant de tes données', 'text', 'moi']]
+};
+const PROVIDER_NAMES = [
+  ['none', 'Désactivée'],
+  ['firebase-google', 'Firebase + compte Google'],
+  ['supabase', 'Supabase (clé)'],
+  ['firebase', 'Firebase (identifiant partagé)']
+];
+
 function openData() {
-  const d = $('#dataDlg'), c = Sync.cfg;
-  const field = (label, name, type = 'text', ph = '') =>
-    h('label', {}, h('span', { class: 'lbl', style: 'margin:6px 0 4px' }, label), h('input', { name, type, value: c[name] || '', placeholder: ph, autocomplete: 'off', spellcheck: false }));
+  const d = $('#dataDlg'), draft = { ...Sync.cfg };
+  if (!PROVIDER_FIELDS[draft.provider]) draft.provider = 'none';
+  const fieldsBox = h('div'), acct = h('div', { class: 'acct', id: 'acct', hidden: true });
+  const readFields = () => $$('input[data-f]', fieldsBox).forEach(i => { draft[i.dataset.f] = i.value.trim(); });
+  const drawFields = () => {
+    put(fieldsBox, PROVIDER_FIELDS[draft.provider].map(([name, label, type, ph]) =>
+      h('label', {}, h('span', { class: 'lbl', style: 'margin:6px 0 4px' }, label),
+        h('input', { type, value: draft[name] || '', placeholder: ph, autocomplete: 'off', spellcheck: false, dataset: { f: name } }))));
+    acct.hidden = draft.provider !== 'firebase-google';
+    renderAcct();
+  };
   const form = h('form', { method: 'dialog', class: 'dlgbody', onsubmit: e => e.preventDefault() },
     h('h3', {}, 'Données & synchronisation'),
     h('h4', {}, 'Sauvegarde locale'),
@@ -815,22 +958,22 @@ function openData() {
         h('input', { type: 'file', accept: 'application/json,.json', style: 'display:none', onchange: e => { if (e.target.files[0]) { d.close(); importData(e.target.files[0]); } } }))),
     h('h4', {}, 'Synchro PC ↔ téléphone'),
     h('label', {}, h('span', { class: 'lbl', style: 'margin:6px 0 4px' }, 'Fournisseur'),
-      h('select', { name: 'provider' },
-        h('option', { value: 'none', selected: c.provider === 'none' }, 'Désactivée'),
-        h('option', { value: 'supabase', selected: c.provider === 'supabase' }, 'Supabase'),
-        h('option', { value: 'firebase', selected: c.provider === 'firebase' }, 'Firebase Realtime DB'))),
-    field('URL du projet / de la base', 'url', 'text', 'https://xxxx.supabase.co'),
-    field('Clé (anon Supabase / jeton Firebase)', 'key', 'password'),
-    field('Identifiant de tes données', 'row', 'text', 'moi'),
+      h('select', { name: 'provider', onchange: e => { readFields(); draft.provider = e.target.value; drawFields(); } },
+        PROVIDER_NAMES.map(([v, label]) => h('option', { value: v, selected: draft.provider === v }, label)))),
+    fieldsBox,
+    acct,
     h('div', { class: 'status', id: 'syncStatus' }, Sync.last),
     h('div', { class: 'row end wrapr' },
       h('button', { class: 'btn ghost', type: 'button', onclick: () => d.close() }, 'Fermer'),
       h('button', { class: 'btn primary', type: 'button', onclick: () => {
-        const f = form.elements;
-        Sync.cfg = { provider: f.provider.value, url: f.url.value.trim(), key: f.key.value.trim(), row: f.row.value.trim() || 'moi' };
-        Sync.saveCfg(); if (Sync.enabled()) Sync.run();
+        readFields();
+        if (draft.provider === 'none' && Sync.cfg.provider === 'none') { toast('Choisis d’abord un fournisseur'); return; }
+        Sync.cfg = { ...draft, row: draft.row || 'moi' };
+        Sync.saveCfg();
+        if (Sync.enabled()) Sync.run();
+        else if (draft.provider !== 'none') toast('Renseigne tous les champs');
       } }, 'Enregistrer & synchroniser')));
-  d.replaceChildren(form); d.showModal();
+  d.replaceChildren(form); drawFields(); d.showModal();
 }
 
 /* Navigation par onglets (mobile) */
