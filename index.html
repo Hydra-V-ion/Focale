@@ -56,7 +56,7 @@ section[data-sec]{display:block}
   body[data-tab=week] section:not([data-sec=week]){display:none}
 }
 @media (min-width:960px){
-  .app{display:grid;grid-template-columns:minmax(0,28fr) minmax(0,44fr) minmax(0,28fr);min-height:calc(100dvh - 48px);padding-bottom:0}
+  .app{display:grid;grid-template-columns:minmax(0,24fr) minmax(0,46fr) minmax(0,30fr);min-height:calc(100dvh - 48px);padding-bottom:0}
   .colL,.colC,.colR{order:0}
   .colL,.colR{background:var(--s1)}
   .colL{border-right:1px solid var(--line)}
@@ -291,6 +291,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 <main class="app">
   <div class="colL">
     <section data-sec="focus"><div class="blk" id="projCard"></div></section>
+    <section data-sec="quests"><div class="blk" id="questCard"></div></section>
   </div>
   <div class="colC">
     <section data-sec="focus">
@@ -307,7 +308,6 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
     </section>
   </div>
   <aside class="colR">
-    <section data-sec="quests"><div class="blk" id="questCard"></div></section>
     <section data-sec="week"><div class="blk" id="weekCard"></div></section>
   </aside>
 </main>
@@ -787,7 +787,7 @@ function renderQuests() {
       h('button', { class: 'check', role: 'checkbox', 'aria-checked': done, 'aria-label': 'Valider « ' + q.name + ' »', onclick: () => toggleQuest(q.id) }, done ? '✓' : ''),
       h('div', { class: 'grow' }, h('input', { type: 'text', class: 'flat', value: q.name, 'aria-label': 'Nom de la quête', oninput: e => { q.name = e.target.value; save(); } })),
       pauseToday ? h('span', { class: 'chip pause', title: 'Jour occupé : streak protégé' }, 'pause') : null,
-      h('span', { class: 'chip' + (st > 0 ? ' fire' : ''), title: 'Régularité' }, st > 0 ? `${st} ${q.freq === 'weekly' ? 'sem.' : 'j'}` : '—'),
+      st > 0 ? h('span', { class: 'chip fire', title: 'Série en cours' }, `${st} ${q.freq === 'weekly' ? 'sem.' : 'j'}`) : null,
       h('button', { class: 'del', 'aria-label': 'Supprimer la quête', onclick: async () => {
         if (await ask({ title: `Supprimer « ${q.name || 'Sans titre'} » ?`, text: 'Son historique sera perdu.', ok: 'Supprimer', danger: true })) {
           state.quests = state.quests.filter(x => x.id !== q.id); save(); renderQuests();
