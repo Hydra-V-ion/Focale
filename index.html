@@ -1,0 +1,994 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>FOCALE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E0E10">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="Un focus par semaine, des micro-habitudes.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FOCALE">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%230E0E10'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%2310B981' stroke-width='8' stroke-dasharray='28 14'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23F4F4F5'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#0E0E10; --s1:#18181B; --s2:#27272A; --line:#27272A; --line2:#3F3F46;
+  --tx:#F4F4F5; --mut:#A1A1AA; --acc:#10B981; --acc-h:#34D399; --bad:#EF4444;
+  --r:4px;
+  --sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);
+  font:15px/1.45 var(--sans);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+body{min-height:100dvh;padding-top:env(safe-area-inset-top)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.mut{color:var(--mut)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+
+/* Barre du haut */
+.top{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 16px;
+  border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:10}
+.brand{display:flex;align-items:center;font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.3em;text-transform:uppercase}
+.brand::before{content:"";width:8px;height:8px;background:var(--acc);margin-right:12px}
+.top .tools{display:flex;align-items:center;gap:4px}
+#syncDot{width:8px;height:8px;background:var(--line2);margin-right:8px}
+#syncDot[data-s=ok]{background:var(--tx)}
+#syncDot[data-s=sync]{background:var(--mut)}
+#syncDot[data-s=err]{background:var(--bad)}
+.iconbtn{min-width:40px;min-height:40px;border-radius:var(--r);border:0;background:transparent;display:grid;place-items:center;color:var(--mut);font-size:16px}
+.iconbtn:hover{background:var(--s2);color:var(--tx)}
+
+/* Structure pleine largeur */
+.app{display:flex;flex-direction:column;padding-bottom:calc(56px + env(safe-area-inset-bottom))}
+.colC{order:1}.colL{order:2}.colR{order:3}
+section[data-sec]{display:block}
+.blk{padding:12px;border-bottom:1px solid var(--line)}
+@media (max-width:959px){
+  body:not([data-tab]) section:not([data-sec=focus]),
+  body[data-tab=focus] section:not([data-sec=focus]),
+  body[data-tab=quests] section:not([data-sec=quests]),
+  body[data-tab=week] section:not([data-sec=week]){display:none}
+}
+@media (min-width:960px){
+  .app{display:grid;grid-template-columns:minmax(0,28fr) minmax(0,44fr) minmax(0,28fr);min-height:calc(100dvh - 48px);padding-bottom:0}
+  .colL,.colC,.colR{order:0}
+  .colL,.colR{background:var(--s1)}
+  .colL{border-right:1px solid var(--line)}
+  .colR{border-left:1px solid var(--line)}
+  .blk{padding:16px}
+  .colC section[data-sec]{display:flex;flex-direction:column;height:100%}
+  .colC #wheelCard{flex:1;display:flex;flex-direction:column}
+  .colC .wheelbox{max-width:min(100%,400px);margin:auto;padding:8px 0}
+  .colC #spinBtn{max-width:400px;margin:0 auto}
+  .tabs{display:none!important}
+}
+
+/* En-têtes de section */
+.sh{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:24px;margin-bottom:8px}
+.sh .t{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);font-weight:500}
+.sh .rt{display:flex;align-items:center;gap:12px}
+.cnt{font-family:var(--mono);font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%}
+.cd{font-family:var(--mono);font-size:12px;color:var(--acc);white-space:nowrap}
+.lbl{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin:0 0 6px}
+
+/* Focus */
+.fname{margin:2px 0 12px;font-size:clamp(24px,6.4vw,32px);line-height:1.1;letter-spacing:-.03em;font-weight:700;word-break:break-word}
+.fname.empty{font-size:20px;letter-spacing:-.01em;font-weight:600;color:var(--mut)}
+.prog{display:flex;align-items:center;gap:12px;margin:12px 0}
+.segs{display:flex;gap:3px;flex:1}
+.seg{flex:1;height:6px;border-radius:1px;background:var(--s2)}
+.seg.on{background:var(--acc)}
+.seg.on.bonus{background:var(--tx)}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.tag{display:inline-block;margin-top:8px;font-family:var(--mono);font-size:12px;color:var(--mut);
+  border:1px dashed var(--line2);border-radius:var(--r);padding:4px 8px}
+
+/* Champs */
+input[type=text],input:not([type]),select{width:100%;min-height:40px;padding:6px 10px;border-radius:var(--r);
+  background:var(--bg);border:1px solid var(--line);outline:none;font-size:16px}
+input:hover,select:hover{border-color:var(--line2)}
+input:focus,select:focus{border-color:var(--acc)}
+input::placeholder{color:#8A8A93}
+select{appearance:none;padding-right:30px;background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23A1A1AA' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 10px center}
+.colL input[type=text],.colR input[type=text],.colR select{background-color:var(--bg)}
+
+/* Boutons fins */
+.btn{min-height:40px;padding:0 14px;border-radius:var(--r);border:1px solid var(--line2);
+  background:transparent;font-size:13px;font-weight:600;color:var(--tx);white-space:nowrap}
+.btn:hover{background:var(--s2)}
+.btn:disabled{opacity:.4;cursor:not-allowed;background:transparent}
+.btn.primary{border-color:var(--acc);color:var(--acc)}
+.btn.primary:hover{border-color:var(--acc-h);color:var(--acc-h);background:rgba(16,185,129,.12)}
+.btn.primary:disabled{border-color:var(--line2);color:var(--mut)}
+.btn.ok{border-color:var(--acc);color:var(--tx)}
+.btn.ok:hover{border-color:var(--acc-h);background:rgba(16,185,129,.12)}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#0E0E10}
+.btn.ghost{border-color:transparent;color:var(--mut)}
+.btn.ghost:hover{color:var(--tx)}
+.btn.block{width:100%}
+.btn.sq{width:40px;padding:0;font-size:18px;line-height:1}
+.linkbtn{background:none;border:0;color:var(--mut);font-size:12px;text-decoration:underline;
+  text-underline-offset:3px;padding:0 4px;min-height:32px}
+.linkbtn:hover{color:var(--bad)}
+@media (pointer:fine){
+  input[type=text],input:not([type]),select,.btn{min-height:32px}
+  input[type=text],input:not([type]),select{font-size:13px}
+  .btn.sq{width:32px}
+}
+.row{display:flex;gap:8px;align-items:center}
+.row.end{justify-content:flex-end}
+.row.wrapr{flex-wrap:wrap}
+.grow{flex:1 1 0;min-width:0}
+
+/* Roue */
+.wheelbox{position:relative;width:100%;max-width:300px;margin:12px auto}
+#wheel{display:block;width:100%;aspect-ratio:1;touch-action:manipulation}
+.ptr{position:absolute;left:50%;top:-4px;transform:translateX(-50%);width:0;height:0;
+  border-left:7px solid transparent;border-right:7px solid transparent;border-top:14px solid var(--acc);z-index:2}
+
+/* Listes */
+.rows{list-style:none;margin:0;padding:0}
+.rows>li{border-top:1px solid var(--line)}
+.prow{display:flex;align-items:center;gap:8px;padding:6px 0}
+.prow.off{opacity:.5}
+.pcol{display:grid;gap:0;flex:1;min-width:0}
+.flat{background:transparent!important;border:1px solid transparent!important;padding:4px 6px!important;min-height:32px!important}
+.flat:hover{border-color:var(--line2)!important}
+.flat:focus{border-color:var(--acc)!important}
+.pcol .nm{font-weight:600;font-size:14px}
+.pcol .ac{color:var(--mut);font-size:14px}
+.sw{position:relative;width:34px;height:18px;flex:none}
+.sw input{position:absolute;inset:-12px -4px;width:auto;height:auto;opacity:0;margin:0;cursor:pointer;z-index:1;min-height:0}
+.sw span{position:absolute;inset:0;border-radius:3px;background:var(--line2)}
+.sw span::after{content:"";position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:2px;background:var(--tx);transition:transform .1s}
+.sw input:checked+span{background:var(--acc)}
+.sw input:checked+span::after{transform:translateX(16px);background:#0E0E10}
+.del{background:none;border:0;color:var(--mut);min-width:36px;min-height:36px;border-radius:var(--r);font-size:14px;flex:none}
+.del:hover{color:var(--bad);background:var(--s2)}
+.addrow{display:flex;gap:6px;margin-top:8px}
+.addrow input{flex:1;min-width:0}
+.addrow select{width:auto;min-width:104px}
+.grp{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin:12px 0 4px}
+.grp:first-of-type{margin-top:0}
+.qrow{display:flex;align-items:center;gap:8px;padding:4px 0}
+.qrow.done input{text-decoration:line-through;color:var(--mut)}
+.check{width:24px;height:24px;flex:none;border-radius:3px;border:1.5px solid var(--line2);background:transparent;
+  display:grid;place-items:center;font-weight:800;font-size:13px;color:#0E0E10;position:relative;padding:0}
+.check::before{content:"";position:absolute;inset:-8px}
+.check:hover{border-color:var(--mut)}
+.qrow.done .check{background:var(--acc);border-color:var(--acc)}
+.chip{font-family:var(--mono);font-size:12px;padding:1px 6px;border-radius:3px;border:1px solid var(--line);color:var(--mut);white-space:nowrap}
+.chip.fire{color:var(--tx);border-color:var(--line2)}
+.chip.pause{border-style:dashed}
+.empty-s{color:var(--mut);font-size:13px;padding:4px 0}
+
+/* Soirs : bandeau de 7 cellules */
+.days{display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--line2);border-radius:var(--r);overflow:hidden}
+.day{display:grid;gap:1px;justify-items:center;align-content:center;min-height:56px;padding:6px 0;
+  border:0;border-right:1px solid var(--line);border-radius:0;background:transparent}
+.day:last-child{border-right:0}
+.day:hover{background:var(--s2)}
+.day .dn{font-family:var(--mono);font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+.day .dd{font-family:var(--mono);font-size:16px;font-weight:600}
+.day .ds{font-family:var(--mono);font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.day.today{outline:1px solid var(--tx);outline-offset:-1px}
+.day.sess .ds{color:var(--acc)}
+.day.busy{background:var(--s2)}
+.day.busy .dd{color:var(--mut);text-decoration:line-through}
+.reasons{display:grid;gap:6px;margin-top:8px}
+.reasons label{display:flex;align-items:center;gap:8px}
+.reasons label b{min-width:52px;font-family:var(--mono);font-size:12px;color:var(--mut);font-weight:500}
+
+/* Navigation mobile */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(3,1fr);
+  background:var(--bg);border-top:1px solid var(--line);padding:0 0 env(safe-area-inset-bottom)}
+.tabs button{background:none;border:0;border-top:2px solid transparent;min-height:56px;color:var(--mut);display:grid;
+  gap:2px;justify-items:center;align-content:center;font-size:13px;font-weight:600}
+.tabs button .ic{font-size:18px;line-height:1.1}
+.tabs button[aria-selected=true]{color:var(--tx);border-top-color:var(--acc)}
+
+/* Dialogues / toast */
+dialog{background:var(--s1);color:var(--tx);border:1px solid var(--line2);border-radius:var(--r);padding:0;
+  width:min(92vw,440px);max-height:88dvh;overflow:auto}
+dialog::backdrop{background:rgba(0,0,0,.72)}
+.dlgbody{padding:16px;display:grid;gap:12px}
+.dlgbody h3{margin:0;font-size:16px;letter-spacing:-.01em}
+.dlgbody h4{margin:8px 0 0;font-family:var(--mono);font-size:11px;font-weight:500;color:var(--acc);text-transform:uppercase;letter-spacing:.12em}
+.dlgbody p{margin:0;font-size:13px}
+.status{font-family:var(--mono);font-size:13px;color:var(--mut)}
+.acct{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:1px solid var(--line);border-radius:var(--r);padding:8px 10px}
+.acct[hidden]{display:none}
+.acct .who{font-family:var(--mono);font-size:12px;color:var(--mut);flex:1 1 140px;min-width:0;overflow:hidden;text-overflow:ellipsis}
+#toast{position:fixed;left:50%;bottom:calc(60px + env(safe-area-inset-bottom));transform:translate(-50%,8px);
+  background:var(--tx);color:#0E0E10;padding:8px 14px;border-radius:var(--r);font-size:13px;font-weight:600;
+  opacity:0;pointer-events:none;transition:opacity .15s,transform .15s;z-index:50;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+@media (min-width:960px){#toast{bottom:24px}}
+.onb{display:flex;align-items:center;gap:10px;padding:8px 0}
+.onb-box{width:20px;height:20px;flex:none;border:1.5px solid var(--line2);border-radius:3px;display:grid;place-items:center;font-size:12px;font-weight:800;color:#0E0E10}
+.onb.done .onb-box{background:var(--acc);border-color:var(--acc)}
+.onb-label{flex:1;min-width:0;font-size:14px}
+.onb.done .onb-label{color:var(--mut);text-decoration:line-through}
+@media (pointer:coarse){
+  .del{min-width:44px;min-height:44px}
+  .check{width:32px;height:32px}
+  .btn{min-height:44px}
+  input[type=text],input:not([type]),select{min-height:44px}
+  .prow,.qrow{padding:8px 0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">Focale</div>
+  <div class="tools">
+    <span id="syncDot" title="Synchronisation désactivée"></span>
+    <button class="iconbtn" id="dataBtn" aria-label="Réglages" title="Réglages">⚙</button>
+  </div>
+</header>
+
+<main class="app">
+  <div class="colL">
+    <section data-sec="focus"><div class="blk" id="projCard"></div></section>
+  </div>
+  <div class="colC">
+    <section data-sec="focus">
+      <div class="blk" id="onbCard" hidden></div>
+      <div class="blk" id="focusCard"></div>
+      <div class="blk" id="wheelCard">
+        <div class="sh"><span class="t">Roue</span><span class="cnt" id="wheelHint"></span></div>
+        <div class="wheelbox" id="wheelBox">
+          <div class="ptr"></div>
+          <canvas id="wheel" aria-label="Roue des projets"></canvas>
+        </div>
+        <button class="btn primary block" id="spinBtn">Lancer la roue</button>
+      </div>
+    </section>
+  </div>
+  <aside class="colR">
+    <section data-sec="quests"><div class="blk" id="questCard"></div></section>
+    <section data-sec="week"><div class="blk" id="weekCard"></div></section>
+  </aside>
+</main>
+
+<nav class="tabs" role="tablist" aria-label="Navigation">
+  <button role="tab" data-go="focus"><span class="ic">◎</span>Focus</button>
+  <button role="tab" data-go="quests"><span class="ic">✓</span>Quêtes</button>
+  <button role="tab" data-go="week"><span class="ic">☾</span>Calendrier</button>
+</nav>
+
+<dialog id="dlg"></dialog>
+<dialog id="dataDlg"></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+/* =========================================================
+   FOCALE — fichier unique. Sections du code :
+   1. Utilitaires dates / DOM
+   2. État + persistance (localStorage)
+   3. Synchronisation distante (adaptateurs Supabase / Firebase)
+   4. Logique métier (focus, quêtes, streaks, soirées)
+   5. Rendu
+   6. Roue (canvas)
+   7. Dialogues, PWA, démarrage
+   ========================================================= */
+
+/* ---------- 1. Utilitaires ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const pad = n => String(n).padStart(2, '0');
+const dkey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const mondayOf = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
+const today = () => dkey(new Date());
+const thisWeek = () => dkey(mondayOf(new Date()));
+const weekDates = () => { const m = mondayOf(new Date()); return Array.from({ length: 7 }, (_, i) => addDays(m, i)); };
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+const mod = (a, n) => ((a % n) + n) % n;
+const DAY_NAMES = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+
+/* Création d'éléments sans innerHTML (pas d'injection possible) */
+function h(tag, props = {}, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'dataset') Object.assign(el.dataset, v);
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (k in el && !k.includes('-')) el[k] = v;
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const kid of kids.flat()) {
+    if (kid == null || kid === false) continue;
+    el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  }
+  return el;
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+/* ---------- 2. État + persistance ---------- */
+/* ---------- Configuration de la synchronisation ---------- */
+const CONFIG = {
+  url: 'https://focale-ced26-default-rtdb.europe-west1.firebasedatabase.app',
+  key: 'AIzaSyCPWftt-vWPaWvzIC9glqSYI-II8Ygvd9w', // clé API web : publique, la sécurité repose sur les règles
+  project: '',                                  // vide = déduit de l'URL
+  row: 'moi'
+};
+
+const LS_KEY = 'focusflow.v1';
+const LS_TAB = 'focusflow.tab';
+
+const defaultState = () => ({
+  v: 1, updatedAt: 0,
+  projects: [],            // {id,name,action,active}
+  focus: null,             // {projectId,name,week,lockedAt}
+  sessions: {},            // {'YYYY-MM-DD': true}  sessions validées
+  quests: [],              // {id,name,freq:'daily'|'weekly',log:{clé:true},created}
+  busy: {},                // {'YYYY-MM-DD': 'raison'}  soirées occupées
+  wheelRot: 0,
+  history: []              // anciens focus {week,name}
+});
+
+function normalize(s) {
+  s = s && typeof s === 'object' ? s : {};
+  const out = { ...defaultState(), ...s };
+  const obj = o => (o && typeof o === 'object' && !Array.isArray(o)) ? o : {};
+  out.projects = (Array.isArray(s.projects) ? s.projects : []).filter(p => p && p.name != null)
+    .map(p => ({ id: String(p.id || uid()), name: String(p.name), action: String(p.action || ''), active: p.active !== false }));
+  out.quests = (Array.isArray(s.quests) ? s.quests : []).filter(q => q && q.name != null)
+    .map(q => ({ id: String(q.id || uid()), name: String(q.name), freq: q.freq === 'weekly' ? 'weekly' : 'daily', log: obj(q.log), created: q.created || today() }));
+  out.busy = obj(s.busy);
+  out.sessions = obj(s.sessions);
+  out.focus = s.focus && typeof s.focus === 'object' && s.focus.week ? s.focus : null;
+  out.wheelRot = Number(s.wheelRot) || 0;
+  out.updatedAt = Number(s.updatedAt) || 0;
+  out.history = Array.isArray(s.history) ? s.history.slice(-52) : [];
+  return out;
+}
+
+function prune(s) {
+  const limit = dkey(addDays(new Date(), -400));
+  for (const m of [s.busy, s.sessions]) for (const k of Object.keys(m)) if (k < limit) delete m[k];
+  for (const q of s.quests) for (const k of Object.keys(q.log)) if (k < limit) delete q.log[k];
+}
+
+/* Une clé par compte : « local » (hors connexion) garde la clé historique. */
+function keyFor(scope) { return scope === 'local' ? LS_KEY : LS_KEY + ':' + scope; }
+
+function loadState(scope = 'local') {
+  try {
+    const raw = localStorage.getItem(keyFor(scope));
+    const s = raw ? normalize(JSON.parse(raw)) : defaultState();
+    prune(s); return s;
+  } catch (e) { return defaultState(); }
+}
+
+let activeScope = 'local';
+let state = loadState();
+
+/* touch: met à jour le timestamp ; push: déclenche la synchro distante */
+function save(touch = true, push = true) {
+  if (touch) state.updatedAt = Date.now();
+  try { localStorage.setItem(keyFor(activeScope), JSON.stringify(state)); }
+  catch (e) { toast('Stockage local indisponible'); }
+  renderOnboarding();
+  if (push) Sync.schedulePush();
+}
+
+/* ---------- 3. Synchronisation distante (Firebase + compte Google) ----------
+   Données : users/<uid>/state. Stratégie : le plus récent gagne (state.updatedAt). */
+const Remote = {
+  loggedIn: async c => { await Auth.init(c); await Auth.first; return !!Auth.user; },
+  async endpoint(c) {
+    const t = await Auth.user.getIdToken();
+    return `${c.url.replace(/\/$/, '')}/users/${encodeURIComponent(Auth.user.uid)}/state.json?auth=${encodeURIComponent(t)}`;
+  },
+  async pull(c) {
+    const r = await fetch(await this.endpoint(c));
+    if (!r.ok) throw new Error('Firebase ' + r.status + (r.status === 401 ? ' (vérifie les règles de la base)' : ''));
+    return await r.json();
+  },
+  async push(c, data) {
+    const r = await fetch(await this.endpoint(c), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    if (!r.ok) throw new Error('Firebase ' + r.status + (r.status === 401 ? ' (vérifie les règles de la base)' : ''));
+  }
+};
+
+const Sync = {
+  cfg: CONFIG,
+  timer: null, last: '', busy: false,
+  enabled() { return !!this.cfg.url && !!this.cfg.key; },
+  setStatus(s, msg = '') {
+    this.last = msg;
+    const d = $('#syncDot');
+    if (d) { d.dataset.s = s; d.title = msg; }
+    const el = $('#syncStatus'); if (el) el.textContent = msg;
+  },
+  schedulePush() {
+    if (!this.enabled()) return;
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.run(), 1500);
+  },
+  async run() {
+    if (!this.enabled() || this.busy) return;
+    this.busy = true; this.setStatus('sync', 'Synchronisation…');
+    const hour = () => new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    try {
+      if (!(await Remote.loggedIn(this.cfg))) { this.setStatus('off', 'Connecte-toi pour synchroniser'); return; }
+      const remote = await Remote.pull(this.cfg);
+      const rTime = remote ? Number(remote.updatedAt) || 0 : -1;
+      if (remote && rTime > state.updatedAt) {
+        state = normalize(remote); prune(state); rollover(); save(false, false); renderAll();
+        this.setStatus('ok', 'Synchronisé à ' + hour());
+      } else if (!remote || state.updatedAt > rTime) {
+        await Remote.push(this.cfg, state);
+        this.setStatus('ok', 'Synchronisé à ' + hour());
+      } else this.setStatus('ok', 'Synchronisé à ' + hour());
+    } catch (e) { this.setStatus('err', 'Erreur : ' + e.message); }
+    finally { this.busy = false; renderAcct(); }
+  }
+};
+
+/* ---------- 3b. Connexion Google (Firebase Auth) ----------
+   Le SDK n'est chargé qu'à la demande (fournisseur « Firebase + Google » actif).
+   Les données restent lisibles hors-ligne : seule la synchro a besoin du SDK. */
+const FB_SDK = 'https://www.gstatic.com/firebasejs/10.14.1/';
+const projectOf = c => ((c.project || '').trim()) || ((String(c.url || '').match(/^https?:\/\/([^.]+?)(?:-default-rtdb)?\./) || [])[1] || '');
+
+/* Chaque compte a ses propres données sur cet appareil.
+   Le premier compte connecté récupère les données hors-ligne existantes, une seule fois. */
+const CLAIM_KEY = LS_KEY + ':claimed';
+function switchScope(scope) {
+  try {
+    if (scope !== 'local' && !localStorage.getItem(CLAIM_KEY) && localStorage.getItem(keyFor('local'))) {
+      if (!localStorage.getItem(keyFor(scope))) {
+        localStorage.setItem(keyFor(scope), localStorage.getItem(keyFor('local')));
+        localStorage.removeItem(keyFor('local'));
+      }
+      localStorage.setItem(CLAIM_KEY, scope);
+    }
+  } catch (e) {}
+  if (scope === activeScope) return;
+  activeScope = scope;
+  state = loadState(scope);
+  renderAll();
+}
+
+const Auth = {
+  auth: null, user: null, first: null, sig: '',
+  loadScript(src) {
+    return new Promise((res, rej) => {
+      const el = document.createElement('script');
+      el.src = src; el.onload = res; el.onerror = () => rej(new Error('SDK Firebase injoignable (hors-ligne ?)'));
+      document.head.append(el);
+    });
+  },
+  async init(cfg) {
+    const sig = cfg.key + '|' + projectOf(cfg);
+    if (this.auth) {
+      if (sig !== this.sig) throw new Error('Recharge la page pour appliquer cette configuration');
+      return this.auth;
+    }
+    if (!/^https?:$/.test(location.protocol)) throw new Error('Ouvre l’appli en http(s), pas depuis un fichier local');
+    if (!window.firebase) await this.loadScript(FB_SDK + 'firebase-app-compat.js');
+    if (!firebase.auth) await this.loadScript(FB_SDK + 'firebase-auth-compat.js');
+    const pid = projectOf(cfg);
+    firebase.initializeApp({ apiKey: cfg.key, authDomain: pid + '.firebaseapp.com', projectId: pid });
+    const a = firebase.auth();
+    this.sig = sig;
+    this.first = new Promise(res => {
+      a.onAuthStateChanged(u => {
+        this.user = u; switchScope(u ? u.uid : 'local'); res(); renderAcct();
+        if (u) Sync.run(); else Sync.setStatus('off', 'Connexion Google requise');
+      });
+    });
+    a.getRedirectResult().catch(e => Sync.setStatus('err', 'Connexion : ' + (e.code || e.message)));
+    this.auth = a;
+    return a;
+  },
+  /* À appeler directement depuis un clic : la popup doit naître du geste de l'utilisateur */
+  async signIn() {
+    const p = new firebase.auth.GoogleAuthProvider();
+    try { await this.auth.signInWithPopup(p); }
+    catch (e) {
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') await this.auth.signInWithRedirect(p);
+      else throw e;
+    }
+  },
+  signOut() { return this.auth.signOut(); }
+};
+
+function googleSignIn() {
+  Auth.signIn().catch(e => {
+    if (!/popup-closed|cancelled-popup/.test(e.code || '')) Sync.setStatus('err', 'Connexion : ' + (e.code || e.message));
+  });
+}
+
+function renderAcct() {
+  const box = $('#acct'); if (!box) return;
+  const u = Auth.user;
+  put(box,
+    h('span', { class: 'who' }, u ? (u.email || 'Connecté') : Auth.auth ? 'Non connecté' : 'Connexion en cours…'),
+    u ? h('button', { class: 'btn', type: 'button', onclick: () => Auth.signOut() }, 'Se déconnecter')
+      : h('button', { class: 'btn primary', type: 'button', disabled: !Auth.auth, onclick: googleSignIn }, 'Se connecter avec Google'));
+}
+
+/* ---------- 4. Logique métier ---------- */
+const activeProjects = () => state.projects.filter(p => p.active);
+const focusActive = () => !!state.focus && state.focus.week === thisWeek();
+const isBusy = k => Object.prototype.hasOwnProperty.call(state.busy, k);
+const busyCount = () => weekDates().filter(d => isBusy(dkey(d))).length;
+const weekTarget = () => Math.max(0, 7 - busyCount());
+const sessionsDone = () => weekDates().filter(d => state.sessions[dkey(d)]).length;
+
+/* Changement de semaine : le focus expire, la roue se déverrouille */
+function rollover() {
+  if (state.focus && state.focus.week !== thisWeek()) {
+    state.history.push({ week: state.focus.week, name: state.focus.name });
+    state.history = state.history.slice(-52);
+    state.focus = null; save(); return true;
+  }
+  return false;
+}
+
+function lockFocus(p) {
+  state.focus = { projectId: p.id, name: p.name, week: thisWeek(), lockedAt: Date.now() };
+  save(); renderAll(); toast('Focus de la semaine : ' + p.name);
+}
+
+async function emergencyUnlock() {
+  const ok = await ask({
+    title: 'Déverrouiller d’urgence ?',
+    text: 'Le focus actuel sera abandonné et la roue pourra être relancée. Tes sessions de la semaine sont conservées.',
+    ok: 'Déverrouiller', danger: true
+  });
+  if (!ok) return;
+  state.focus = null; save(); renderAll(); toast('Roue déverrouillée');
+}
+
+function toggleSession() {
+  const k = today();
+  if (state.sessions[k]) delete state.sessions[k]; else state.sessions[k] = true;
+  save(); renderFocus(); renderWeek();
+}
+
+/* Streaks — les soirées occupées sont « neutres » : ni points, ni cassure */
+function dailyStreak(q) {
+  let n = 0; const t = today(); let d = new Date();
+  for (let i = 0; i < 400; i++) {
+    const k = dkey(d);
+    if (q.log[k]) n++;
+    else if (isBusy(k)) { /* neutre */ }
+    else if (k === t) { /* aujourd'hui encore possible */ }
+    else break;
+    d = addDays(d, -1);
+  }
+  return n;
+}
+function weeklyStreak(q) {
+  let n = 0; const cur = thisWeek(); let d = mondayOf(new Date());
+  for (let i = 0; i < 120; i++) {
+    const k = dkey(d);
+    if (q.log[k]) n++;
+    else if (k !== cur) break;
+    d = addDays(d, -7);
+  }
+  return n;
+}
+const periodKey = q => q.freq === 'daily' ? today() : thisWeek();
+const questDone = q => !!q.log[periodKey(q)];
+
+function toggleQuest(id) {
+  const q = state.quests.find(x => x.id === id); if (!q) return;
+  const k = periodKey(q);
+  if (q.log[k]) delete q.log[k]; else q.log[k] = true;
+  save(); renderQuests();
+}
+
+function toggleBusy(k) {
+  if (isBusy(k)) delete state.busy[k]; else state.busy[k] = '';
+  save(); renderAll();
+  if (isBusy(k) && matchMedia('(hover:hover)').matches) { const i = $(`[data-reason="${k}"]`); if (i) i.focus(); }
+}
+
+/* ---------- 5. Rendu ---------- */
+function countdownText() {
+  const now = new Date();
+  const end = new Date(addDays(mondayOf(now), 7).getTime() - 1);
+  const ms = Math.max(0, end - now);
+  const d = Math.floor(ms / 864e5), hh = Math.floor((ms % 864e5) / 36e5), mm = Math.floor((ms % 36e5) / 6e4);
+  return 'Verrouillé · ' + (d > 0 ? `${d} j ${hh} h` : `${hh} h ${mm} min`);
+}
+function updateCountdown() { $$('[data-cd]').forEach(e => e.textContent = countdownText()); }
+
+/* Mise à jour sans re-rendu pendant la frappe */
+function bindProject(p, field, extra = {}) {
+  return h('input', {
+    type: 'text', value: p[field], dataset: { bind: `${p.id}:${field}` }, ...extra,
+    oninput: e => {
+      p[field] = e.target.value;
+      if (field === 'name' && state.focus && state.focus.projectId === p.id) state.focus.name = p.name;
+      save();
+      $$(`[data-bind="${p.id}:${field}"]`).forEach(x => { if (x !== e.target) x.value = p[field]; });
+      if (field === 'name') {
+        $$(`[data-bind-text="${p.id}"]`).forEach(x => x.textContent = p.name || 'Sans titre');
+        drawWheel();
+      }
+    }
+  });
+}
+
+/* Remplit un conteneur en ignorant null / false et en aplatissant les tableaux */
+function put(box, ...kids) {
+  box.replaceChildren();
+  for (const k of kids.flat(Infinity)) {
+    if (k == null || k === false) continue;
+    box.append(k.nodeType ? k : document.createTextNode(String(k)));
+  }
+}
+const sh = (title, right) => h('div', { class: 'sh' }, h('span', { class: 't' }, title), right || null);
+
+function renderFocus() {
+  const box = $('#focusCard');
+  if (!focusActive()) {
+    const n = activeProjects().length;
+    put(box,
+      sh('Focus'),
+      h('div', { class: 'fname empty' }, 'Aucun focus'),
+      h('button', { class: 'btn primary', onclick: () => $(n ? '#wheelCard' : '#projCard').scrollIntoView({ behavior: 'smooth', block: 'center' }) },
+        n ? 'Lancer la roue ↓' : 'Ajouter un projet ↓'));
+    return;
+  }
+  const f = state.focus, p = state.projects.find(x => x.id === f.projectId);
+  const target = weekTarget(), done = sessionsDone(), k = today();
+  const segs = h('div', { class: 'segs', role: 'progressbar', 'aria-valuenow': done, 'aria-valuemax': target });
+  for (let i = 0; i < Math.max(target, done); i++) segs.append(h('div', { class: 'seg' + (i < done ? (i >= target ? ' on bonus' : ' on') : '') }));
+  put(box,
+    sh('Focus', h('span', { class: 'rt' },
+      h('span', { class: 'cd', 'data-cd': '', title: 'Jusqu’à dimanche 23:59' }, countdownText()),
+      h('button', { class: 'linkbtn', onclick: emergencyUnlock, title: 'Déverrouiller d’urgence' }, 'Déverrouiller'))),
+    h('h2', { class: 'fname', dataset: { bindText: p ? p.id : '' } }, p ? (p.name || 'Sans titre') : f.name),
+    p ? [
+      h('label', { class: 'lbl' }, 'Prochaine micro-action (15-30 min)'),
+      bindProject(p, 'action', { placeholder: 'Que faire en ouvrant l’appli ?', 'aria-label': 'Prochaine micro-action' })
+    ] : h('div', { class: 'mut' }, 'Projet supprimé'),
+    h('div', { class: 'prog' }, segs, h('span', { class: 'cnt' }, `${done}/${target}`)),
+    h('div', { class: 'acts' },
+      h('button', { class: 'btn block ' + (state.sessions[k] ? 'ok' : 'primary'), onclick: toggleSession },
+        state.sessions[k] ? 'Session validée ✓ · annuler' : 'Valider ma session du jour (30-60 min)')),
+    isBusy(k) ? h('span', { class: 'tag' }, 'Soirée occupée' + (state.busy[k] ? ' · ' + state.busy[k] : '')) : null
+  );
+}
+
+function renderProjects() {
+  const box = $('#projCard');
+  const list = h('ul', { class: 'rows' });
+  state.projects.forEach(p => {
+    list.append(h('li', { class: 'prow' + (p.active ? '' : ' off') },
+      h('label', { class: 'sw', title: p.active ? 'Dans la roue' : 'Hors de la roue' },
+        h('input', { type: 'checkbox', checked: p.active, 'aria-label': 'Dans la roue', onchange: e => { p.active = e.target.checked; save(); renderProjects(); drawWheel(); updateWheelUI(); renderFocus(); } }),
+        h('span')),
+      h('div', { class: 'pcol' },
+        bindProject(p, 'name', { class: 'flat nm', placeholder: 'Nom du projet', 'aria-label': 'Nom du projet' }),
+        bindProject(p, 'action', { class: 'flat ac', placeholder: 'Micro-action', 'aria-label': 'Prochaine micro-action' })),
+      h('button', { class: 'del', 'aria-label': 'Supprimer le projet', onclick: () => deleteProject(p) }, '✕')));
+  });
+  put(box,
+    sh('Projets', h('span', { class: 'cnt' }, `${activeProjects().length}/${state.projects.length}`)),
+    state.projects.length ? list : null,
+    h('form', { class: 'addrow', onsubmit: e => {
+      e.preventDefault(); const i = e.target.elements.n; const v = i.value.trim(); if (!v) return;
+      state.projects.push({ id: uid(), name: v, action: '', active: true });
+      save(); renderProjects(); drawWheel(); updateWheelUI(); renderFocus();
+    } },
+      h('input', { name: 'n', type: 'text', placeholder: 'Nouveau projet', maxLength: 80, 'aria-label': 'Nouveau projet' }),
+      h('button', { class: 'btn primary sq', type: 'submit', 'aria-label': 'Ajouter le projet' }, '+'))
+  );
+}
+
+async function deleteProject(p) {
+  const isFocus = focusActive() && state.focus.projectId === p.id;
+  const ok = await ask({
+    title: `Supprimer « ${p.name || 'Sans titre'} » ?`,
+    text: isFocus ? 'C’est ton focus actuel : le supprimer déverrouille la roue.' : 'Cette action est définitive.',
+    ok: 'Supprimer', danger: true
+  });
+  if (!ok) return;
+  state.projects = state.projects.filter(x => x.id !== p.id);
+  if (isFocus) state.focus = null;
+  save(); renderAll();
+}
+
+function renderQuests() {
+  const box = $('#questCard');
+  const row = q => {
+    const done = questDone(q), pauseToday = q.freq === 'daily' && isBusy(today()) && !done;
+    const st = q.freq === 'daily' ? dailyStreak(q) : weeklyStreak(q);
+    return h('li', { class: 'qrow' + (done ? ' done' : '') },
+      h('button', { class: 'check', role: 'checkbox', 'aria-checked': done, 'aria-label': 'Valider « ' + q.name + ' »', onclick: () => toggleQuest(q.id) }, done ? '✓' : ''),
+      h('div', { class: 'grow' }, h('input', { type: 'text', class: 'flat', value: q.name, 'aria-label': 'Nom de la quête', oninput: e => { q.name = e.target.value; save(); } })),
+      pauseToday ? h('span', { class: 'chip pause', title: 'Soirée occupée : streak protégé' }, 'pause') : null,
+      h('span', { class: 'chip' + (st > 0 ? ' fire' : ''), title: 'Régularité' }, st > 0 ? `${st} ${q.freq === 'weekly' ? 'sem.' : 'j'}` : '—'),
+      h('button', { class: 'del', 'aria-label': 'Supprimer la quête', onclick: async () => {
+        if (await ask({ title: `Supprimer « ${q.name || 'Sans titre'} » ?`, text: 'Son historique sera perdu.', ok: 'Supprimer', danger: true })) {
+          state.quests = state.quests.filter(x => x.id !== q.id); save(); renderQuests();
+        }
+      } }, '✕'));
+  };
+  const daily = state.quests.filter(q => q.freq === 'daily'), weekly = state.quests.filter(q => q.freq === 'weekly');
+  put(box,
+    sh('Quêtes', h('span', { class: 'cnt' }, `${state.quests.filter(questDone).length}/${state.quests.length}`)),
+    daily.length ? [h('div', { class: 'grp' }, 'Jour'), h('ul', { class: 'rows' }, daily.map(row))] : null,
+    weekly.length ? [h('div', { class: 'grp' }, 'Semaine'), h('ul', { class: 'rows' }, weekly.map(row))] : null,
+    h('form', { class: 'addrow', onsubmit: e => {
+      e.preventDefault(); const f = e.target.elements; const v = f.n.value.trim(); if (!v) return;
+      state.quests.push({ id: uid(), name: v, freq: f.f.value, log: {}, created: today() });
+      save(); renderQuests();
+    } },
+      h('input', { name: 'n', type: 'text', placeholder: 'Nouvelle quête', maxLength: 80, 'aria-label': 'Nouvelle quête' }),
+      h('select', { name: 'f', 'aria-label': 'Fréquence' }, h('option', { value: 'daily' }, 'Quotidienne'), h('option', { value: 'weekly' }, 'Hebdo')),
+      h('button', { class: 'btn primary sq', type: 'submit', 'aria-label': 'Ajouter la quête' }, '+'))
+  );
+}
+
+function renderWeek() {
+  const box = $('#weekCard');
+  const days = weekDates(), t = today();
+  const chips = h('div', { class: 'days' }, days.map((d, i) => {
+    const k = dkey(d), b = isBusy(k), s = !!state.sessions[k];
+    return h('button', { class: 'day' + (b ? ' busy' : '') + (k === t ? ' today' : '') + (s ? ' sess' : ''), 'aria-pressed': b, 'aria-label': `${DAY_NAMES[i]} ${d.getDate()} : ${b ? 'soirée occupée' : 'libre'}`, onclick: () => toggleBusy(k) },
+      h('span', { class: 'dn' }, DAY_NAMES[i]), h('span', { class: 'dd' }, d.getDate()),
+      h('span', { class: 'ds' }, b ? 'Occupée' : s ? 'Fait' : 'Libre'));
+  }));
+  const busyDays = days.filter(d => isBusy(dkey(d)));
+  put(box,
+    sh('Calendrier', h('span', { class: 'cnt' }, `${sessionsDone()}/${weekTarget()}`)),
+    chips,
+    busyDays.length ? h('div', { class: 'reasons' }, busyDays.map(d => {
+      const k = dkey(d);
+      return h('label', {}, h('b', {}, DAY_NAMES[(d.getDay() + 6) % 7] + ' ' + d.getDate()),
+        h('input', { type: 'text', value: state.busy[k] || '', placeholder: 'Raison (ex. Stream)', dataset: { reason: k }, maxLength: 60,
+          oninput: e => { state.busy[k] = e.target.value; save(); renderFocus(); } }));
+    })) : null
+  );
+}
+
+function renderAll() {
+  renderFocus(); renderProjects(); renderQuests(); renderWeek(); renderOnboarding(); updateWheelUI();
+  requestAnimationFrame(drawWheel);
+}
+
+/* ---------- 6. La roue (Canvas) ---------- */
+const wheel = { rot: state.wheelRot, spinning: false };
+
+function drawWheel() {
+  const cv = $('#wheel'); const size = cv.clientWidth; if (!size) return;
+  const dpr = window.devicePixelRatio || 1, px = Math.round(size * dpr);
+  if (cv.width !== px) { cv.width = px; cv.height = px; }
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, size, size);
+  const ACC = '#10B981', BG = '#0E0E10', TX = '#F4F4F5', MUT = '#A1A1AA', RING = '#334039', TONES = ['#1B2327', '#12241C', '#222C30', '#0F3A2B'];
+  const SANS = 'Inter,-apple-system,"Segoe UI",system-ui,sans-serif', MONO = 'ui-monospace,Menlo,Consolas,monospace';
+  const c = size / 2, R = c - 2, list = activeProjects(), n = list.length;
+  if (n === 0) {
+    ctx.beginPath(); ctx.arc(c, c, R, 0, Math.PI * 2); ctx.fillStyle = TONES[0]; ctx.fill();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = RING; ctx.stroke();
+    ctx.fillStyle = MUT; ctx.font = '600 14px ' + SANS; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('Ajoute des projets', c, c);
+    return;
+  }
+  const seg = Math.PI * 2 / n;
+  const pointed = Math.floor(mod(-Math.PI / 2 - wheel.rot, Math.PI * 2) / seg) % n; /* segment sous le curseur */
+  list.forEach((p, i) => {
+    const a0 = wheel.rot + i * seg, a1 = a0 + seg, hot = i === pointed;
+    ctx.beginPath(); if (n > 1) ctx.moveTo(c, c); ctx.arc(c, c, R, a0, n === 1 ? a0 + Math.PI * 2 : a1); ctx.closePath();
+    let ti = i % TONES.length; if (i === n - 1 && n > 1 && ti === 0) ti = 1; /* évite deux voisins identiques */
+    ctx.fillStyle = hot ? ACC : TONES[ti]; ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = BG; ctx.stroke();
+    ctx.save(); ctx.translate(c, c); ctx.rotate(a0 + seg / 2);
+    ctx.textBaseline = 'middle';
+    if (n <= 12) { ctx.textAlign = 'left'; ctx.font = '500 10px ' + MONO; ctx.fillStyle = hot ? BG : MUT; ctx.fillText(String(i + 1).padStart(2, '0'), 28, 0); }
+    ctx.textAlign = 'right'; ctx.font = '600 13px ' + SANS; ctx.fillStyle = hot ? BG : TX;
+    const maxW = R - 66; let txt = p.name || 'Sans titre';
+    if (ctx.measureText(txt).width > maxW) { while (txt.length > 1 && ctx.measureText(txt + '…').width > maxW) txt = txt.slice(0, -1); txt = txt.trimEnd() + '…'; }
+    ctx.fillText(txt, R - 14, 0); ctx.restore();
+  });
+  ctx.beginPath(); ctx.arc(c, c, R, 0, Math.PI * 2); ctx.lineWidth = 1.5; ctx.strokeStyle = RING; ctx.stroke();
+  ctx.beginPath(); ctx.arc(c, c, 20, 0, Math.PI * 2); ctx.fillStyle = BG; ctx.fill();
+  ctx.lineWidth = 2; ctx.strokeStyle = focusActive() ? ACC : RING; ctx.stroke();
+}
+
+function updateWheelUI() {
+  const b = $('#spinBtn'), locked = focusActive(), n = activeProjects().length;
+  b.disabled = locked || wheel.spinning || n === 0;
+  b.textContent = wheel.spinning ? 'Ça tourne…' : locked ? 'Verrouillée' : n === 0 ? 'Aucun projet actif' : 'Lancer la roue';
+  $('#wheelBox').classList.toggle('locked', locked);
+  $('#wheelHint').textContent = locked ? state.focus.name : `${n} actif${n > 1 ? 's' : ''}`;
+}
+
+function spin() {
+  if (wheel.spinning || focusActive()) return;
+  const list = activeProjects(); if (!list.length) return;
+  wheel.spinning = true; updateWheelUI();
+  const n = list.length, seg = Math.PI * 2 / n, w = Math.floor(Math.random() * n);
+  const jitter = (Math.random() - .5) * seg * .7;
+  const targetMod = mod(-Math.PI / 2 - (w + .5) * seg + jitter, Math.PI * 2);
+  const startRot = wheel.rot, startMod = mod(startRot, Math.PI * 2);
+  const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const delta = mod(targetMod - startMod, Math.PI * 2) + Math.PI * 2 * (reduce ? 1 : 5 + Math.floor(Math.random() * 3));
+  const dur = reduce ? 500 : 4400, t0 = performance.now();
+  const step = now => {
+    const t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 4);
+    wheel.rot = startRot + delta * e; drawWheel();
+    if (t < 1) requestAnimationFrame(step);
+    else {
+      wheel.spinning = false; wheel.rot = mod(wheel.rot, Math.PI * 2); state.wheelRot = wheel.rot;
+      lockFocus(list[w]);
+    }
+  };
+  requestAnimationFrame(step);
+}
+
+/* ---------- 7. Dialogues, données, PWA, démarrage ---------- */
+function ask({ title, text, ok = 'Confirmer', danger = false }) {
+  return new Promise(res => {
+    const d = $('#dlg'); d.returnValue = '';
+    d.replaceChildren(h('form', { method: 'dialog', class: 'dlgbody' },
+      h('h3', {}, title), text ? h('p', { class: 'mut' }, text) : null,
+      h('div', { class: 'row end' },
+        h('button', { class: 'btn ghost', value: 'no' }, 'Annuler'),
+        h('button', { class: 'btn ' + (danger ? 'danger' : 'primary'), value: 'yes' }, ok))));
+    d.onclose = () => res(d.returnValue === 'yes');
+    d.showModal();
+  });
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = h('a', { href: URL.createObjectURL(blob), download: `focale-${today()}.json` });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+}
+
+function importData(file) {
+  const fr = new FileReader();
+  fr.onload = async () => {
+    try {
+      const obj = JSON.parse(fr.result);
+      if (!obj || !Array.isArray(obj.projects) || !Array.isArray(obj.quests)) throw new Error('format');
+      if (!await ask({ title: 'Remplacer les données ?', text: 'Les données actuelles seront écrasées par le fichier importé.', ok: 'Importer', danger: true })) return;
+      state = normalize(obj); prune(state); rollover(); save(); renderAll(); toast('Données importées');
+    } catch (e) { toast('Fichier invalide'); }
+  };
+  fr.readAsText(file);
+}
+
+const ONB_KEY = LS_KEY + ':onb';
+
+/* Carte « Premiers pas » : disparaît définitivement sur cet appareil une fois les 3 étapes faites */
+function renderOnboarding() {
+  const box = $('#onbCard'); if (!box) return;
+  let seen = {};
+  try { seen = JSON.parse(localStorage.getItem(ONB_KEY) || '{}') || {}; } catch (e) {}
+  if (seen.all) { box.hidden = true; return; }
+  const p = !!seen.p || state.projects.length > 0;
+  const r = !!seen.r || !!state.focus || state.history.length > 0;
+  const s = !!seen.s || Object.keys(state.sessions).length > 0;
+  const all = p && r && s;
+  try { localStorage.setItem(ONB_KEY, JSON.stringify({ p, r, s, all })); } catch (e) {}
+  if (all) { box.hidden = true; return; }
+  box.hidden = false;
+  const step = (done, label, btn, action, disabled) => h('li', { class: 'onb' + (done ? ' done' : '') },
+    h('span', { class: 'onb-box' }, done ? '✓' : ''),
+    h('span', { class: 'onb-label' }, label),
+    done ? null : h('button', { class: 'btn', type: 'button', disabled, onclick: action }, btn));
+  put(box,
+    sh('Premiers pas', h('span', { class: 'cnt' }, `${[p, r, s].filter(Boolean).length}/3`)),
+    h('ul', { class: 'rows' },
+      step(p, 'Ajouter un projet', 'Ajouter', () => { const i = $('#projCard input[name=n]'); if (i) { i.focus(); i.scrollIntoView({ block: 'center' }); } }, false),
+      step(r, 'Lancer la roue', 'Lancer', spin, !activeProjects().length),
+      step(s, 'Valider une session', 'Ouvrir', () => $('#focusCard').scrollIntoView({ block: 'center' }), !focusActive())));
+}
+
+/* Réglages : sauvegarde, compte et état de la synchro. Aucun champ technique. */
+function openData() {
+  const d = $('#dataDlg');
+  const form = h('form', { method: 'dialog', class: 'dlgbody', onsubmit: e => e.preventDefault() },
+    h('h3', {}, 'Réglages'),
+    h('h4', {}, 'Compte'),
+    h('div', { class: 'acct', id: 'acct' }),
+    h('div', { class: 'status', id: 'syncStatus' }, Sync.last),
+    h('h4', {}, 'Sauvegarde'),
+    h('div', { class: 'row wrapr' },
+      h('button', { class: 'btn grow', type: 'button', onclick: exportData }, 'Exporter'),
+      h('label', { class: 'btn grow', style: 'text-align:center;display:grid;place-items:center' }, 'Importer',
+        h('input', { type: 'file', accept: 'application/json,.json', style: 'display:none', onchange: e => { if (e.target.files[0]) { d.close(); importData(e.target.files[0]); } } }))),
+    h('div', { class: 'row end' },
+      h('button', { class: 'btn ghost', type: 'button', onclick: () => d.close() }, 'Fermer')));
+  d.replaceChildren(form); renderAcct(); d.showModal();
+}
+
+/* Navigation par onglets (mobile) */
+function setTab(t) {
+  document.body.dataset.tab = t;
+  try { localStorage.setItem(LS_TAB, t); } catch (e) {}
+  $$('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.go === t));
+  requestAnimationFrame(drawWheel);
+}
+
+/* PWA : manifeste intégré + icônes générées en canvas */
+function makeIcon(size) {
+  const cv = h('canvas', { width: size, height: size }), x = cv.getContext('2d'), c = size / 2;
+  x.fillStyle = '#0E0E10'; x.fillRect(0, 0, size, size);
+  const n = 6, seg = Math.PI * 2 / n, R = size * .34;
+  for (let i = 0; i < n; i++) {
+    x.beginPath(); x.moveTo(c, c); x.arc(c, c, R, i * seg - Math.PI / 2, (i + 1) * seg - Math.PI / 2); x.closePath();
+    x.fillStyle = i === 0 ? '#10B981' : ['#1B2327', '#12241C', '#222C30', '#0F3A2B', '#1B2327'][i - 1]; x.fill();
+    x.lineWidth = size * .014; x.strokeStyle = '#0E0E10'; x.stroke();
+  }
+  x.beginPath(); x.arc(c, c, size * .08, 0, Math.PI * 2); x.fillStyle = '#0E0E10'; x.fill();
+  return cv.toDataURL('image/png');
+}
+function setupPWA() {
+  try {
+    const i192 = makeIcon(192), i512 = makeIcon(512);
+    document.head.append(h('link', { rel: 'apple-touch-icon', href: makeIcon(180) }));
+    const manifest = {
+      name: 'FOCALE', short_name: 'FOCALE', description: 'Un focus par semaine, des micro-habitudes.',
+      start_url: location.href.split('#')[0], scope: location.href.split('#')[0].replace(/[^/]*$/, ''),
+      display: 'standalone', orientation: 'portrait', background_color: '#0E0E10', theme_color: '#0E0E10', lang: 'fr',
+      icons: [{ src: i192, sizes: '192x192', type: 'image/png', purpose: 'any' }, { src: i512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }]
+    };
+    document.head.append(h('link', { rel: 'manifest', href: URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' })) }));
+  } catch (e) { /* PWA facultative */ }
+  /* sw.js (optionnel, à côté de index.html) : hors-ligne + installabilité renforcée */
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+/* Détection du changement de jour / de semaine */
+let renderedDay = today();
+function tick() {
+  const t = today();
+  if (t !== renderedDay) {
+    renderedDay = t;
+    const newWeek = rollover();
+    renderAll();
+    if (newWeek) toast('Nouvelle semaine : la roue est déverrouillée');
+  } else updateCountdown();
+}
+
+function init() {
+  $('#spinBtn').addEventListener('click', spin);
+  $('#dataBtn').addEventListener('click', openData);
+  $$('.tabs button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.go)));
+  let t0 = 'focus'; try { t0 = localStorage.getItem(LS_TAB) || 'focus'; } catch (e) {}
+  setTab(['focus', 'quests', 'week'].includes(t0) ? t0 : 'focus');
+  const newWeek = rollover();
+  renderAll();
+  if (newWeek) toast('Nouvelle semaine : la roue est déverrouillée');
+  new ResizeObserver(drawWheel).observe($('#wheel'));
+  setInterval(tick, 30000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { tick(); Sync.run(); } });
+  window.addEventListener('focus', tick);
+  window.addEventListener('storage', e => { if (e.key === keyFor(activeScope)) { state = loadState(activeScope); renderAll(); } });
+  Sync.setStatus('off', 'Connecte-toi pour synchroniser');
+  setupPWA();
+  Sync.run();
+}
+init();
+</script>
+</body>
+</html>
