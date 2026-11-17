@@ -56,7 +56,8 @@ section[data-sec]{display:block}
   body[data-tab=week] section:not([data-sec=week]){display:none}
 }
 @media (min-width:960px){
-  .app{display:grid;grid-template-columns:minmax(0,24fr) minmax(0,46fr) minmax(0,30fr);min-height:calc(100dvh - 48px);padding-bottom:0}
+  .app{display:grid;grid-template-columns:minmax(0,24fr) minmax(0,46fr) minmax(0,30fr);height:calc(100dvh - 48px);min-height:0;padding-bottom:0}
+  .colL,.colC,.colR{min-height:0;overflow-y:auto}
   .colL,.colC,.colR{order:0}
   .colL,.colR{background:var(--s1)}
   .colL{border-right:1px solid var(--line)}
@@ -64,9 +65,9 @@ section[data-sec]{display:block}
   .blk{padding:16px}
   .colC section[data-sec]{display:flex;flex-direction:column;height:100%}
   .colC #wheelCard{flex:1;display:flex;flex-direction:column}
-  .colC .wheelbox{width:min(100%,520px,max(260px,calc(100dvh - 440px)));max-width:none;margin:auto;padding:8px 0}
+  .colC .wheelbox{width:min(100%,640px,max(280px,calc(100dvh - 440px)));max-width:none;margin:auto;padding:8px 0}
   .colC .blk{padding:14px 16px}
-  .colC #spinBtn{max-width:520px;margin:0 auto}
+  .colC #spinBtn{max-width:640px;margin:0 auto}
   .tabs{display:none!important}
 }
 
