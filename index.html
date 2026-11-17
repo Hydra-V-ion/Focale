@@ -794,7 +794,7 @@ function renderWeek() {
   }));
   const busyDays = days.filter(d => isBusy(dkey(d)));
   put(box,
-    sh('Soirs', h('span', { class: 'cnt' }, `${sessionsDone()}/${weekTarget()}`)),
+    sh('Calendrier', h('span', { class: 'cnt' }, `${sessionsDone()}/${weekTarget()}`)),
     chips,
     busyDays.length ? h('div', { class: 'reasons' }, busyDays.map(d => {
       const k = dkey(d);
