@@ -357,20 +357,24 @@ function prune(s) {
   for (const q of s.quests) for (const k of Object.keys(q.log)) if (k < limit) delete q.log[k];
 }
 
-function loadState() {
+/* Une clé par compte : « local » (hors connexion) garde la clé historique. */
+function keyFor(scope) { return scope === 'local' ? LS_KEY : LS_KEY + ':' + scope; }
+
+function loadState(scope = 'local') {
   try {
-    const raw = localStorage.getItem(LS_KEY);
+    const raw = localStorage.getItem(keyFor(scope));
     const s = raw ? normalize(JSON.parse(raw)) : defaultState();
     prune(s); return s;
   } catch (e) { return defaultState(); }
 }
 
+let activeScope = 'local';
 let state = loadState();
 
 /* touch: met à jour le timestamp ; push: déclenche la synchro distante */
 function save(touch = true, push = true) {
   if (touch) state.updatedAt = Date.now();
-  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+  try { localStorage.setItem(keyFor(activeScope), JSON.stringify(state)); }
   catch (e) { toast('Stockage local indisponible'); }
   if (push) Sync.schedulePush();
 }
@@ -506,6 +510,25 @@ const Sync = {
 const FB_SDK = 'https://www.gstatic.com/firebasejs/10.14.1/';
 const projectOf = c => ((c.project || '').trim()) || ((String(c.url || '').match(/^https?:\/\/([^.]+?)(?:-default-rtdb)?\./) || [])[1] || '');
 
+/* Chaque compte a ses propres données sur cet appareil.
+   Le premier compte connecté récupère les données hors-ligne existantes, une seule fois. */
+const CLAIM_KEY = LS_KEY + ':claimed';
+function switchScope(scope) {
+  try {
+    if (scope !== 'local' && !localStorage.getItem(CLAIM_KEY) && localStorage.getItem(keyFor('local'))) {
+      if (!localStorage.getItem(keyFor(scope))) {
+        localStorage.setItem(keyFor(scope), localStorage.getItem(keyFor('local')));
+        localStorage.removeItem(keyFor('local'));
+      }
+      localStorage.setItem(CLAIM_KEY, scope);
+    }
+  } catch (e) {}
+  if (scope === activeScope) return;
+  activeScope = scope;
+  state = loadState(scope);
+  renderAll();
+}
+
 const Auth = {
   auth: null, user: null, first: null, sig: '',
   loadScript(src) {
@@ -530,7 +553,7 @@ const Auth = {
     this.sig = sig;
     this.first = new Promise(res => {
       a.onAuthStateChanged(u => {
-        this.user = u; res(); renderAcct();
+        this.user = u; switchScope(u ? u.uid : 'local'); res(); renderAcct();
         if (u) Sync.run(); else Sync.setStatus('off', 'Connexion Google requise');
       });
     });
@@ -1038,7 +1061,7 @@ function init() {
   setInterval(tick, 30000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { tick(); Sync.run(); } });
   window.addEventListener('focus', tick);
-  window.addEventListener('storage', e => { if (e.key === LS_KEY) { state = loadState(); renderAll(); } });
+  window.addEventListener('storage', e => { if (e.key === keyFor(activeScope)) { state = loadState(activeScope); renderAll(); } });
   Sync.setStatus(Sync.enabled() ? 'ok' : 'off', Sync.enabled() ? 'Configurée' : 'Désactivée');
   setupPWA();
   Sync.run();
