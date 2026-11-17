@@ -128,6 +128,24 @@ select{appearance:none;padding-right:30px;background:var(--bg) url("data:image/s
 .small{font-size:13px}
 .salonrow{align-items:center}
 
+/* Statistiques */
+.stats{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.stats summary{cursor:pointer;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);list-style:none;padding:4px 0}
+.stats summary::-webkit-details-marker{display:none}
+.stats summary::before{content:"+ "}
+.stats[open] summary::before{content:"− "}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.tile{display:grid;gap:2px;border:1px solid var(--line);border-radius:var(--r);padding:8px 10px}
+.tl{font-size:12px;color:var(--mut)}
+.tv{font-family:var(--mono);font-size:18px;font-weight:600}
+.bars{display:grid;gap:6px}
+.bars .lbl{margin-bottom:2px}
+.bar{display:grid;grid-template-columns:36px 1fr 44px;align-items:center;gap:8px;font-size:12px}
+.bl{font-family:var(--mono);color:var(--mut)}
+.bt{display:block;height:8px;background:var(--s2);border-radius:2px;overflow:hidden}
+.bf{display:block;height:100%;background:var(--acc)}
+.bv{font-family:var(--mono);text-align:right}
+
 /* Pastilles de thème */
 .swatches{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 .swatch{width:32px;height:32px;border-radius:4px;border:0;padding:0;outline:2px solid transparent;outline-offset:2px}
@@ -717,7 +735,7 @@ function renderFocus() {
     h('div', { class: 'acts' },
       h('button', { class: 'btn block ' + (state.sessions[k] ? 'ok' : 'primary'), onclick: () => toggleSession() },
         state.sessions[k] ? 'Session validée ✓ · annuler' : 'Valider ma session du jour (30-60 min)')),
-    isBusy(k) ? h('span', { class: 'tag' }, 'Soirée occupée' + (state.busy[k] ? ' · ' + state.busy[k] : '')) : null
+    isBusy(k) ? h('span', { class: 'tag' }, 'Jour occupé' + (state.busy[k] ? ' · ' + state.busy[k] : '')) : null
   );
 }
 
@@ -768,7 +786,7 @@ function renderQuests() {
     return h('li', { class: 'qrow' + (done ? ' done' : '') },
       h('button', { class: 'check', role: 'checkbox', 'aria-checked': done, 'aria-label': 'Valider « ' + q.name + ' »', onclick: () => toggleQuest(q.id) }, done ? '✓' : ''),
       h('div', { class: 'grow' }, h('input', { type: 'text', class: 'flat', value: q.name, 'aria-label': 'Nom de la quête', oninput: e => { q.name = e.target.value; save(); } })),
-      pauseToday ? h('span', { class: 'chip pause', title: 'Soirée occupée : streak protégé' }, 'pause') : null,
+      pauseToday ? h('span', { class: 'chip pause', title: 'Jour occupé : streak protégé' }, 'pause') : null,
       h('span', { class: 'chip' + (st > 0 ? ' fire' : ''), title: 'Régularité' }, st > 0 ? `${st} ${q.freq === 'weekly' ? 'sem.' : 'j'}` : '—'),
       h('button', { class: 'del', 'aria-label': 'Supprimer la quête', onclick: async () => {
         if (await ask({ title: `Supprimer « ${q.name || 'Sans titre'} » ?`, text: 'Son historique sera perdu.', ok: 'Supprimer', danger: true })) {
@@ -855,6 +873,7 @@ function renderWeek() {
     badge ? h('div', { class: 'badgerow' }, h('span', { class: 'badge' }, 'Semaine · ' + badge)) : null,
     h('div', { class: 'mgrid' }, ['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(x => h('span', { class: 'mdow' }, x)), cells),
     dayPanel(selDay),
+    statsBox(),
     boardBox());
   Salons.refresh();
 }
@@ -869,9 +888,61 @@ function dayPanel(k) {
     h('div', { class: 'acts' },
       h('button', { class: 'btn grow ' + (sess ? 'ok' : 'primary'), type: 'button', disabled: k > today() && !sess, onclick: () => toggleSession(k) },
         sess ? 'Session validée ✓' : 'Valider la session'),
-      h('button', { class: 'btn grow', type: 'button', onclick: () => toggleBusy(k) }, busy ? 'Retirer soir occupé' : 'Soir occupé')),
-    busy ? h('input', { type: 'text', value: state.busy[k] || '', placeholder: 'Raison (ex. Stream)', maxLength: 60, 'aria-label': 'Raison de la soirée occupée',
+      h('button', { class: 'btn grow', type: 'button', onclick: () => toggleBusy(k) }, busy ? 'Retirer jour occupé' : 'Jour occupé')),
+    busy ? h('input', { type: 'text', value: state.busy[k] || '', placeholder: 'Raison (ex. Stream)', maxLength: 60, 'aria-label': 'Raison du jour occupé',
       oninput: e => { state.busy[k] = e.target.value; save(); } }) : null);
+}
+
+/* ----- Statistiques : calculées à partir des données ----- */
+let statsOpen = false;
+const parseKey = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+
+function totalPoints() {
+  const keys = [...Object.keys(state.sessions), ...Object.keys(state.busy), ...state.quests.map(q => q.created)].filter(Boolean).sort();
+  if (!keys.length) return 0;
+  let sum = 0;
+  for (let d = parseKey(keys[0]); dkey(d) <= today(); d = addDays(d, 1)) sum += dayPoints(d) + (d.getDay() === 1 ? weekBonus(d) : 0);
+  return sum;
+}
+function streaks(sorted) {
+  const set = new Set(sorted);
+  let cur = 0, d = new Date();
+  if (!set.has(dkey(d))) d = addDays(d, -1);
+  while (set.has(dkey(d))) { cur++; d = addDays(d, -1); }
+  let best = 0, run = 0, prev = null;
+  for (const k of sorted) {
+    const x = parseKey(k);
+    run = prev && Math.round((x - prev) / 864e5) === 1 ? run + 1 : 1;
+    best = Math.max(best, run); prev = x;
+  }
+  return { cur, best };
+}
+function statsBox() {
+  const { y, m } = nowMonth(), mk = ymKey(y, m);
+  const sessKeys = Object.keys(state.sessions).sort();
+  const { cur, best } = streaks(sessKeys);
+  const questDone = state.quests.reduce((n, q) => n + Object.keys(q.log).length, 0);
+  const months = [];
+  for (let i = 11; i >= 0; i--) { const d = new Date(y, m - i, 1); months.push({ label: MONTHS[d.getMonth()].slice(0, 3), pts: monthPoints(d.getFullYear(), d.getMonth()) }); }
+  const max = Math.max(1, ...months.map(x => x.pts));
+  const tile = (label, value) => h('div', { class: 'tile' }, h('span', { class: 'tl' }, label), h('span', { class: 'tv' }, String(value)));
+  return h('details', { class: 'stats', open: statsOpen, ontoggle: e => { statsOpen = e.target.open; } },
+    h('summary', {}, 'Statistiques'),
+    h('div', { class: 'tiles' },
+      tile('Points ce mois', monthPoints(y, m)),
+      tile('Points au total', totalPoints()),
+      tile('Jours validés ce mois', sessKeys.filter(k => k.startsWith(mk)).length),
+      tile('Jours validés au total', sessKeys.length),
+      tile('Série en cours', cur + ' j'),
+      tile('Meilleure série', best + ' j'),
+      tile('Quêtes faites', questDone),
+      tile('Jours occupés', Object.keys(state.busy).length)),
+    h('div', { class: 'bars' },
+      h('span', { class: 'lbl' }, 'Points par mois (12 derniers)'),
+      months.map(x => h('div', { class: 'bar' },
+        h('span', { class: 'bl' }, x.label),
+        h('span', { class: 'bt' }, h('span', { class: 'bf', style: `width:${Math.round(x.pts / max * 100)}%` })),
+        h('span', { class: 'bv' }, String(x.pts))))));
 }
 
 /* ----- Salons : espace partagé, lisible uniquement par les membres ----- */
