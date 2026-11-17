@@ -23,7 +23,7 @@
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--tx);
-  font:14px/1.4 var(--sans);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+  font:15px/1.45 var(--sans);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
 body{min-height:100dvh;padding-top:env(safe-area-inset-top)}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
@@ -70,11 +70,11 @@ section[data-sec]{display:block}
 
 /* En-têtes de section */
 .sh{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:24px;margin-bottom:8px}
-.sh .t{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);font-weight:500}
+.sh .t{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);font-weight:500}
 .sh .rt{display:flex;align-items:center;gap:12px}
-.cnt{font-family:var(--mono);font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%}
+.cnt{font-family:var(--mono);font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%}
 .cd{font-family:var(--mono);font-size:12px;color:var(--acc);white-space:nowrap}
-.lbl{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin:0 0 6px}
+.lbl{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin:0 0 6px}
 
 /* Focus */
 .fname{margin:2px 0 12px;font-size:clamp(24px,6.4vw,32px);line-height:1.1;letter-spacing:-.03em;font-weight:700;word-break:break-word}
@@ -85,17 +85,17 @@ section[data-sec]{display:block}
 .seg.on{background:var(--acc)}
 .seg.on.bonus{background:var(--tx)}
 .acts{display:flex;gap:8px;flex-wrap:wrap}
-.tag{display:inline-block;margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--mut);
-  border:1px dashed var(--line2);border-radius:var(--r);padding:3px 8px}
+.tag{display:inline-block;margin-top:8px;font-family:var(--mono);font-size:12px;color:var(--mut);
+  border:1px dashed var(--line2);border-radius:var(--r);padding:4px 8px}
 
 /* Champs */
 input[type=text],input:not([type]),select{width:100%;min-height:40px;padding:6px 10px;border-radius:var(--r);
   background:var(--bg);border:1px solid var(--line);outline:none;font-size:16px}
 input:hover,select:hover{border-color:var(--line2)}
 input:focus,select:focus{border-color:var(--acc)}
-input::placeholder{color:#71717A}
-select{appearance:none}
-.colL input[type=text],.colR input[type=text],.colR select{background:var(--bg)}
+input::placeholder{color:#8A8A93}
+select{appearance:none;padding-right:30px;background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23A1A1AA' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 10px center}
+.colL input[type=text],.colR input[type=text],.colR select{background-color:var(--bg)}
 
 /* Boutons fins */
 .btn{min-height:40px;padding:0 14px;border-radius:var(--r);border:1px solid var(--line2);
@@ -141,7 +141,7 @@ select{appearance:none}
 .flat:hover{border-color:var(--line2)!important}
 .flat:focus{border-color:var(--acc)!important}
 .pcol .nm{font-weight:600;font-size:14px}
-.pcol .ac{color:var(--mut);font-size:13px}
+.pcol .ac{color:var(--mut);font-size:14px}
 .sw{position:relative;width:34px;height:18px;flex:none}
 .sw input{position:absolute;inset:-12px -4px;width:auto;height:auto;opacity:0;margin:0;cursor:pointer;z-index:1;min-height:0}
 .sw span{position:absolute;inset:0;border-radius:3px;background:var(--line2)}
@@ -153,7 +153,7 @@ select{appearance:none}
 .addrow{display:flex;gap:6px;margin-top:8px}
 .addrow input{flex:1;min-width:0}
 .addrow select{width:auto;min-width:104px}
-.grp{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin:12px 0 4px}
+.grp{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin:12px 0 4px}
 .grp:first-of-type{margin-top:0}
 .qrow{display:flex;align-items:center;gap:8px;padding:4px 0}
 .qrow.done input{text-decoration:line-through;color:var(--mut)}
@@ -162,7 +162,7 @@ select{appearance:none}
 .check::before{content:"";position:absolute;inset:-8px}
 .check:hover{border-color:var(--mut)}
 .qrow.done .check{background:var(--acc);border-color:var(--acc)}
-.chip{font-family:var(--mono);font-size:11px;padding:1px 6px;border-radius:3px;border:1px solid var(--line);color:var(--mut);white-space:nowrap}
+.chip{font-family:var(--mono);font-size:12px;padding:1px 6px;border-radius:3px;border:1px solid var(--line);color:var(--mut);white-space:nowrap}
 .chip.fire{color:var(--tx);border-color:var(--line2)}
 .chip.pause{border-style:dashed}
 .empty-s{color:var(--mut);font-size:13px;padding:4px 0}
@@ -173,9 +173,9 @@ select{appearance:none}
   border:0;border-right:1px solid var(--line);border-radius:0;background:transparent}
 .day:last-child{border-right:0}
 .day:hover{background:var(--s2)}
-.day .dn{font-family:var(--mono);font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+.day .dn{font-family:var(--mono);font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
 .day .dd{font-family:var(--mono);font-size:16px;font-weight:600}
-.day .ds{font-family:var(--mono);font-size:9px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.day .ds{font-family:var(--mono);font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
 .day.today{outline:1px solid var(--tx);outline-offset:-1px}
 .day.sess .ds{color:var(--acc)}
 .day.busy{background:var(--s2)}
@@ -187,9 +187,9 @@ select{appearance:none}
 /* Navigation mobile */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(3,1fr);
   background:var(--bg);border-top:1px solid var(--line);padding:0 0 env(safe-area-inset-bottom)}
-.tabs button{background:none;border:0;border-top:2px solid transparent;min-height:48px;color:var(--mut);display:grid;
-  gap:0;justify-items:center;align-content:center;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
-.tabs button .ic{font-size:15px;line-height:1.2}
+.tabs button{background:none;border:0;border-top:2px solid transparent;min-height:56px;color:var(--mut);display:grid;
+  gap:2px;justify-items:center;align-content:center;font-size:13px;font-weight:600}
+.tabs button .ic{font-size:18px;line-height:1.1}
 .tabs button[aria-selected=true]{color:var(--tx);border-top-color:var(--acc)}
 
 /* Dialogues / toast */
@@ -198,14 +198,29 @@ dialog{background:var(--s1);color:var(--tx);border:1px solid var(--line2);border
 dialog::backdrop{background:rgba(0,0,0,.72)}
 .dlgbody{padding:16px;display:grid;gap:12px}
 .dlgbody h3{margin:0;font-size:16px;letter-spacing:-.01em}
-.dlgbody h4{margin:8px 0 0;font-family:var(--mono);font-size:10px;font-weight:500;color:var(--acc);text-transform:uppercase;letter-spacing:.12em}
+.dlgbody h4{margin:8px 0 0;font-family:var(--mono);font-size:11px;font-weight:500;color:var(--acc);text-transform:uppercase;letter-spacing:.12em}
 .dlgbody p{margin:0;font-size:13px}
-.status{font-family:var(--mono);font-size:12px;color:var(--mut)}
+.status{font-family:var(--mono);font-size:13px;color:var(--mut)}
+.acct{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:1px solid var(--line);border-radius:var(--r);padding:8px 10px}
+.acct[hidden]{display:none}
+.acct .who{font-family:var(--mono);font-size:12px;color:var(--mut);flex:1 1 140px;min-width:0;overflow:hidden;text-overflow:ellipsis}
 #toast{position:fixed;left:50%;bottom:calc(60px + env(safe-area-inset-bottom));transform:translate(-50%,8px);
   background:var(--tx);color:#0E0E10;padding:8px 14px;border-radius:var(--r);font-size:13px;font-weight:600;
   opacity:0;pointer-events:none;transition:opacity .15s,transform .15s;z-index:50;max-width:90vw;text-align:center}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 @media (min-width:960px){#toast{bottom:24px}}
+.onb{display:flex;align-items:center;gap:10px;padding:8px 0}
+.onb-box{width:20px;height:20px;flex:none;border:1.5px solid var(--line2);border-radius:3px;display:grid;place-items:center;font-size:12px;font-weight:800;color:#0E0E10}
+.onb.done .onb-box{background:var(--acc);border-color:var(--acc)}
+.onb-label{flex:1;min-width:0;font-size:14px}
+.onb.done .onb-label{color:var(--mut);text-decoration:line-through}
+@media (pointer:coarse){
+  .del{min-width:44px;min-height:44px}
+  .check{width:32px;height:32px}
+  .btn{min-height:44px}
+  input[type=text],input:not([type]),select{min-height:44px}
+  .prow,.qrow{padding:8px 0}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -215,7 +230,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   <div class="brand">Focale</div>
   <div class="tools">
     <span id="syncDot" title="Synchronisation désactivée"></span>
-    <button class="iconbtn" id="dataBtn" aria-label="Données et synchronisation" title="Exporter / Importer / Synchroniser">⚙</button>
+    <button class="iconbtn" id="dataBtn" aria-label="Réglages" title="Réglages">⚙</button>
   </div>
 </header>
 
@@ -225,6 +240,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   </div>
   <div class="colC">
     <section data-sec="focus">
+      <div class="blk" id="onbCard" hidden></div>
       <div class="blk" id="focusCard"></div>
       <div class="blk" id="wheelCard">
         <div class="sh"><span class="t">Roue</span><span class="cnt" id="wheelHint"></span></div>
@@ -245,7 +261,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 <nav class="tabs" role="tablist" aria-label="Navigation">
   <button role="tab" data-go="focus"><span class="ic">◎</span>Focus</button>
   <button role="tab" data-go="quests"><span class="ic">✓</span>Quêtes</button>
-  <button role="tab" data-go="week"><span class="ic">☾</span>Soirs</button>
+  <button role="tab" data-go="week"><span class="ic">☾</span>Calendrier</button>
 </nav>
 
 <dialog id="dlg"></dialog>
@@ -304,8 +320,15 @@ function toast(msg) {
 }
 
 /* ---------- 2. État + persistance ---------- */
+/* ---------- Configuration de la synchronisation ---------- */
+const CONFIG = {
+  url: 'https://focale-ced26-default-rtdb.europe-west1.firebasedatabase.app',
+  key: 'AIzaSyCPWftt-vWPaWvzIC9glqSYI-II8Ygvd9w', // clé API web : publique, la sécurité repose sur les règles
+  project: '',                                  // vide = déduit de l'URL
+  row: 'moi'
+};
+
 const LS_KEY = 'focusflow.v1';
-const LS_SYNC = 'focusflow.sync.v1';
 const LS_TAB = 'focusflow.tab';
 
 const defaultState = () => ({
@@ -342,91 +365,56 @@ function prune(s) {
   for (const q of s.quests) for (const k of Object.keys(q.log)) if (k < limit) delete q.log[k];
 }
 
-function loadState() {
+/* Une clé par compte : « local » (hors connexion) garde la clé historique. */
+function keyFor(scope) { return scope === 'local' ? LS_KEY : LS_KEY + ':' + scope; }
+
+function loadState(scope = 'local') {
   try {
-    const raw = localStorage.getItem(LS_KEY);
+    const raw = localStorage.getItem(keyFor(scope));
     const s = raw ? normalize(JSON.parse(raw)) : defaultState();
     prune(s); return s;
   } catch (e) { return defaultState(); }
 }
 
+let activeScope = 'local';
 let state = loadState();
 
 /* touch: met à jour le timestamp ; push: déclenche la synchro distante */
 function save(touch = true, push = true) {
   if (touch) state.updatedAt = Date.now();
-  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+  try { localStorage.setItem(keyFor(activeScope), JSON.stringify(state)); }
   catch (e) { toast('Stockage local indisponible'); }
+  renderOnboarding();
   if (push) Sync.schedulePush();
 }
 
-/* ---------- 3. Synchronisation distante ----------
-   Architecture : un « provider » = { pull(cfg) -> state|null, push(cfg, state) }.
-   Stratégie : dernier écrit gagne (state.updatedAt).
-   Pour ajouter un autre backend, ajouter une entrée dans Providers.
-
-   --- Supabase : SQL à exécuter une fois (SQL editor) ---
-   create table app_state (
-     id text primary key,
-     data jsonb not null,
-     updated_at timestamptz default now()
-   );
-   alter table app_state enable row level security;
-   -- Démarrage rapide (clé anon publique = accès à cette table pour quiconque a la clé) :
-   create policy "open" on app_state for all using (true) with check (true);
-   -- À terme : activer Supabase Auth et filtrer par auth.uid().
-
-   --- Firebase Realtime Database : créer une base, URL du type
-   https://xxx-default-rtdb.europe-west1.firebasedatabase.app
-   et des règles adaptées (".read"/".write" sur /focusflow).
-   ------------------------------------------------------- */
-const Providers = {
-  supabase: {
-    base: c => c.url.replace(/\/$/, '') + '/rest/v1/app_state',
-    headers(c, extra = {}) {
-      const hd = { apikey: c.key, ...extra };
-      if ((c.key || '').startsWith('eyJ')) hd.Authorization = 'Bearer ' + c.key;
-      return hd;
-    },
-    async pull(c) {
-      const r = await fetch(`${this.base(c)}?id=eq.${encodeURIComponent(c.row)}&select=data`, { headers: this.headers(c) });
-      if (!r.ok) throw new Error('Supabase ' + r.status);
-      const rows = await r.json();
-      return rows[0] ? rows[0].data : null;
-    },
-    async push(c, data) {
-      const r = await fetch(`${this.base(c)}?on_conflict=id`, {
-        method: 'POST',
-        headers: this.headers(c, { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' }),
-        body: JSON.stringify({ id: c.row, data, updated_at: new Date().toISOString() })
-      });
-      if (!r.ok) throw new Error('Supabase ' + r.status);
-    }
+/* ---------- 3. Synchronisation distante (Firebase + compte Google) ----------
+   Données : users/<uid>/state. Stratégie : le plus récent gagne (state.updatedAt). */
+const Remote = {
+  loggedIn: async c => { await Auth.init(c); await Auth.first; return !!Auth.user; },
+  async endpoint(c) {
+    const t = await Auth.user.getIdToken();
+    return `${c.url.replace(/\/$/, '')}/users/${encodeURIComponent(Auth.user.uid)}/state.json?auth=${encodeURIComponent(t)}`;
   },
-  firebase: {
-    endpoint: c => `${c.url.replace(/\/$/, '')}/focusflow/${encodeURIComponent(c.row)}.json` + (c.key ? `?auth=${encodeURIComponent(c.key)}` : ''),
-    async pull(c) {
-      const r = await fetch(this.endpoint(c));
-      if (!r.ok) throw new Error('Firebase ' + r.status);
-      return await r.json();
-    },
-    async push(c, data) {
-      const r = await fetch(this.endpoint(c), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-      if (!r.ok) throw new Error('Firebase ' + r.status);
-    }
+  async pull(c) {
+    const r = await fetch(await this.endpoint(c));
+    if (!r.ok) throw new Error('Firebase ' + r.status + (r.status === 401 ? ' (vérifie les règles de la base)' : ''));
+    return await r.json();
+  },
+  async push(c, data) {
+    const r = await fetch(await this.endpoint(c), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    if (!r.ok) throw new Error('Firebase ' + r.status + (r.status === 401 ? ' (vérifie les règles de la base)' : ''));
   }
 };
 
 const Sync = {
-  cfg: (() => { try { return { provider: 'none', url: '', key: '', row: 'moi', ...JSON.parse(localStorage.getItem(LS_SYNC) || '{}') }; } catch (e) { return { provider: 'none', url: '', key: '', row: 'moi' }; } })(),
+  cfg: CONFIG,
   timer: null, last: '', busy: false,
-  enabled() { return !!Providers[this.cfg.provider] && !!this.cfg.url; },
-  saveCfg() { localStorage.setItem(LS_SYNC, JSON.stringify(this.cfg)); this.setStatus(this.enabled() ? 'ok' : 'off', this.enabled() ? 'Configurée' : 'Désactivée'); },
+  enabled() { return !!this.cfg.url && !!this.cfg.key; },
   setStatus(s, msg = '') {
     this.last = msg;
-    const d = $('#syncDot'); if (!d) return;
-    d.dataset.s = s;
-    d.title = 'Synchro : ' + (msg || (s === 'off' ? 'désactivée' : s));
+    const d = $('#syncDot');
+    if (d) { d.dataset.s = s; d.title = msg; }
     const el = $('#syncStatus'); if (el) el.textContent = msg;
   },
   schedulePush() {
@@ -436,21 +424,107 @@ const Sync = {
   },
   async run() {
     if (!this.enabled() || this.busy) return;
-    const p = Providers[this.cfg.provider]; this.busy = true; this.setStatus('sync', 'Synchronisation…');
+    this.busy = true; this.setStatus('sync', 'Synchronisation…');
+    const hour = () => new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     try {
-      const remote = await p.pull(this.cfg);
+      if (!(await Remote.loggedIn(this.cfg))) { this.setStatus('off', 'Connecte-toi pour synchroniser'); return; }
+      const remote = await Remote.pull(this.cfg);
       const rTime = remote ? Number(remote.updatedAt) || 0 : -1;
       if (remote && rTime > state.updatedAt) {
         state = normalize(remote); prune(state); rollover(); save(false, false); renderAll();
-        this.setStatus('ok', 'Données distantes récupérées · ' + new Date().toLocaleTimeString('fr-FR'));
+        this.setStatus('ok', 'Synchronisé à ' + hour());
       } else if (!remote || state.updatedAt > rTime) {
-        await p.push(this.cfg, state);
-        this.setStatus('ok', 'Envoyé · ' + new Date().toLocaleTimeString('fr-FR'));
-      } else this.setStatus('ok', 'À jour · ' + new Date().toLocaleTimeString('fr-FR'));
+        await Remote.push(this.cfg, state);
+        this.setStatus('ok', 'Synchronisé à ' + hour());
+      } else this.setStatus('ok', 'Synchronisé à ' + hour());
     } catch (e) { this.setStatus('err', 'Erreur : ' + e.message); }
-    finally { this.busy = false; }
+    finally { this.busy = false; renderAcct(); }
   }
 };
+
+/* ---------- 3b. Connexion Google (Firebase Auth) ----------
+   Le SDK n'est chargé qu'à la demande (fournisseur « Firebase + Google » actif).
+   Les données restent lisibles hors-ligne : seule la synchro a besoin du SDK. */
+const FB_SDK = 'https://www.gstatic.com/firebasejs/10.14.1/';
+const projectOf = c => ((c.project || '').trim()) || ((String(c.url || '').match(/^https?:\/\/([^.]+?)(?:-default-rtdb)?\./) || [])[1] || '');
+
+/* Chaque compte a ses propres données sur cet appareil.
+   Le premier compte connecté récupère les données hors-ligne existantes, une seule fois. */
+const CLAIM_KEY = LS_KEY + ':claimed';
+function switchScope(scope) {
+  try {
+    if (scope !== 'local' && !localStorage.getItem(CLAIM_KEY) && localStorage.getItem(keyFor('local'))) {
+      if (!localStorage.getItem(keyFor(scope))) {
+        localStorage.setItem(keyFor(scope), localStorage.getItem(keyFor('local')));
+        localStorage.removeItem(keyFor('local'));
+      }
+      localStorage.setItem(CLAIM_KEY, scope);
+    }
+  } catch (e) {}
+  if (scope === activeScope) return;
+  activeScope = scope;
+  state = loadState(scope);
+  renderAll();
+}
+
+const Auth = {
+  auth: null, user: null, first: null, sig: '',
+  loadScript(src) {
+    return new Promise((res, rej) => {
+      const el = document.createElement('script');
+      el.src = src; el.onload = res; el.onerror = () => rej(new Error('SDK Firebase injoignable (hors-ligne ?)'));
+      document.head.append(el);
+    });
+  },
+  async init(cfg) {
+    const sig = cfg.key + '|' + projectOf(cfg);
+    if (this.auth) {
+      if (sig !== this.sig) throw new Error('Recharge la page pour appliquer cette configuration');
+      return this.auth;
+    }
+    if (!/^https?:$/.test(location.protocol)) throw new Error('Ouvre l’appli en http(s), pas depuis un fichier local');
+    if (!window.firebase) await this.loadScript(FB_SDK + 'firebase-app-compat.js');
+    if (!firebase.auth) await this.loadScript(FB_SDK + 'firebase-auth-compat.js');
+    const pid = projectOf(cfg);
+    firebase.initializeApp({ apiKey: cfg.key, authDomain: pid + '.firebaseapp.com', projectId: pid });
+    const a = firebase.auth();
+    this.sig = sig;
+    this.first = new Promise(res => {
+      a.onAuthStateChanged(u => {
+        this.user = u; switchScope(u ? u.uid : 'local'); res(); renderAcct();
+        if (u) Sync.run(); else Sync.setStatus('off', 'Connexion Google requise');
+      });
+    });
+    a.getRedirectResult().catch(e => Sync.setStatus('err', 'Connexion : ' + (e.code || e.message)));
+    this.auth = a;
+    return a;
+  },
+  /* À appeler directement depuis un clic : la popup doit naître du geste de l'utilisateur */
+  async signIn() {
+    const p = new firebase.auth.GoogleAuthProvider();
+    try { await this.auth.signInWithPopup(p); }
+    catch (e) {
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') await this.auth.signInWithRedirect(p);
+      else throw e;
+    }
+  },
+  signOut() { return this.auth.signOut(); }
+};
+
+function googleSignIn() {
+  Auth.signIn().catch(e => {
+    if (!/popup-closed|cancelled-popup/.test(e.code || '')) Sync.setStatus('err', 'Connexion : ' + (e.code || e.message));
+  });
+}
+
+function renderAcct() {
+  const box = $('#acct'); if (!box) return;
+  const u = Auth.user;
+  put(box,
+    h('span', { class: 'who' }, u ? (u.email || 'Connecté') : Auth.auth ? 'Non connecté' : 'Connexion en cours…'),
+    u ? h('button', { class: 'btn', type: 'button', onclick: () => Auth.signOut() }, 'Se déconnecter')
+      : h('button', { class: 'btn primary', type: 'button', disabled: !Auth.auth, onclick: googleSignIn }, 'Se connecter avec Google'));
+}
 
 /* ---------- 4. Logique métier ---------- */
 const activeProjects = () => state.projects.filter(p => p.active);
@@ -681,7 +755,7 @@ function renderWeek() {
   }));
   const busyDays = days.filter(d => isBusy(dkey(d)));
   put(box,
-    sh('Soirs', h('span', { class: 'cnt' }, `${sessionsDone()}/${weekTarget()}`)),
+    sh('Calendrier', h('span', { class: 'cnt' }, `${sessionsDone()}/${weekTarget()}`)),
     chips,
     busyDays.length ? h('div', { class: 'reasons' }, busyDays.map(d => {
       const k = dkey(d);
@@ -693,7 +767,7 @@ function renderWeek() {
 }
 
 function renderAll() {
-  renderFocus(); renderProjects(); renderQuests(); renderWeek(); updateWheelUI();
+  renderFocus(); renderProjects(); renderQuests(); renderWeek(); renderOnboarding(); updateWheelUI();
   requestAnimationFrame(drawWheel);
 }
 
@@ -802,35 +876,49 @@ function importData(file) {
   fr.readAsText(file);
 }
 
+const ONB_KEY = LS_KEY + ':onb';
+
+/* Carte « Premiers pas » : disparaît définitivement sur cet appareil une fois les 3 étapes faites */
+function renderOnboarding() {
+  const box = $('#onbCard'); if (!box) return;
+  let seen = {};
+  try { seen = JSON.parse(localStorage.getItem(ONB_KEY) || '{}') || {}; } catch (e) {}
+  if (seen.all) { box.hidden = true; return; }
+  const p = !!seen.p || state.projects.length > 0;
+  const r = !!seen.r || !!state.focus || state.history.length > 0;
+  const s = !!seen.s || Object.keys(state.sessions).length > 0;
+  const all = p && r && s;
+  try { localStorage.setItem(ONB_KEY, JSON.stringify({ p, r, s, all })); } catch (e) {}
+  if (all) { box.hidden = true; return; }
+  box.hidden = false;
+  const step = (done, label, btn, action, disabled) => h('li', { class: 'onb' + (done ? ' done' : '') },
+    h('span', { class: 'onb-box' }, done ? '✓' : ''),
+    h('span', { class: 'onb-label' }, label),
+    done ? null : h('button', { class: 'btn', type: 'button', disabled, onclick: action }, btn));
+  put(box,
+    sh('Premiers pas', h('span', { class: 'cnt' }, `${[p, r, s].filter(Boolean).length}/3`)),
+    h('ul', { class: 'rows' },
+      step(p, 'Ajouter un projet', 'Ajouter', () => { const i = $('#projCard input[name=n]'); if (i) { i.focus(); i.scrollIntoView({ block: 'center' }); } }, false),
+      step(r, 'Lancer la roue', 'Lancer', spin, !activeProjects().length),
+      step(s, 'Valider une session', 'Ouvrir', () => $('#focusCard').scrollIntoView({ block: 'center' }), !focusActive())));
+}
+
+/* Réglages : sauvegarde, compte et état de la synchro. Aucun champ technique. */
 function openData() {
-  const d = $('#dataDlg'), c = Sync.cfg;
-  const field = (label, name, type = 'text', ph = '') =>
-    h('label', {}, h('span', { class: 'lbl', style: 'margin:6px 0 4px' }, label), h('input', { name, type, value: c[name] || '', placeholder: ph, autocomplete: 'off', spellcheck: false }));
+  const d = $('#dataDlg');
   const form = h('form', { method: 'dialog', class: 'dlgbody', onsubmit: e => e.preventDefault() },
-    h('h3', {}, 'Données & synchronisation'),
-    h('h4', {}, 'Sauvegarde locale'),
-    h('div', { class: 'row wrapr' },
-      h('button', { class: 'btn grow', type: 'button', onclick: exportData }, 'Exporter (JSON)'),
-      h('label', { class: 'btn grow', style: 'text-align:center;display:grid;place-items:center' }, 'Importer (JSON)',
-        h('input', { type: 'file', accept: 'application/json,.json', style: 'display:none', onchange: e => { if (e.target.files[0]) { d.close(); importData(e.target.files[0]); } } }))),
-    h('h4', {}, 'Synchro PC ↔ téléphone'),
-    h('label', {}, h('span', { class: 'lbl', style: 'margin:6px 0 4px' }, 'Fournisseur'),
-      h('select', { name: 'provider' },
-        h('option', { value: 'none', selected: c.provider === 'none' }, 'Désactivée'),
-        h('option', { value: 'supabase', selected: c.provider === 'supabase' }, 'Supabase'),
-        h('option', { value: 'firebase', selected: c.provider === 'firebase' }, 'Firebase Realtime DB'))),
-    field('URL du projet / de la base', 'url', 'text', 'https://xxxx.supabase.co'),
-    field('Clé (anon Supabase / jeton Firebase)', 'key', 'password'),
-    field('Identifiant de tes données', 'row', 'text', 'moi'),
+    h('h3', {}, 'Réglages'),
+    h('h4', {}, 'Compte'),
+    h('div', { class: 'acct', id: 'acct' }),
     h('div', { class: 'status', id: 'syncStatus' }, Sync.last),
-    h('div', { class: 'row end wrapr' },
-      h('button', { class: 'btn ghost', type: 'button', onclick: () => d.close() }, 'Fermer'),
-      h('button', { class: 'btn primary', type: 'button', onclick: () => {
-        const f = form.elements;
-        Sync.cfg = { provider: f.provider.value, url: f.url.value.trim(), key: f.key.value.trim(), row: f.row.value.trim() || 'moi' };
-        Sync.saveCfg(); if (Sync.enabled()) Sync.run();
-      } }, 'Enregistrer & synchroniser')));
-  d.replaceChildren(form); d.showModal();
+    h('h4', {}, 'Sauvegarde'),
+    h('div', { class: 'row wrapr' },
+      h('button', { class: 'btn grow', type: 'button', onclick: exportData }, 'Exporter'),
+      h('label', { class: 'btn grow', style: 'text-align:center;display:grid;place-items:center' }, 'Importer',
+        h('input', { type: 'file', accept: 'application/json,.json', style: 'display:none', onchange: e => { if (e.target.files[0]) { d.close(); importData(e.target.files[0]); } } }))),
+    h('div', { class: 'row end' },
+      h('button', { class: 'btn ghost', type: 'button', onclick: () => d.close() }, 'Fermer')));
+  d.replaceChildren(form); renderAcct(); d.showModal();
 }
 
 /* Navigation par onglets (mobile) */
@@ -895,8 +983,8 @@ function init() {
   setInterval(tick, 30000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { tick(); Sync.run(); } });
   window.addEventListener('focus', tick);
-  window.addEventListener('storage', e => { if (e.key === LS_KEY) { state = loadState(); renderAll(); } });
-  Sync.setStatus(Sync.enabled() ? 'ok' : 'off', Sync.enabled() ? 'Configurée' : 'Désactivée');
+  window.addEventListener('storage', e => { if (e.key === keyFor(activeScope)) { state = loadState(activeScope); renderAll(); } });
+  Sync.setStatus('off', 'Connecte-toi pour synchroniser');
   setupPWA();
   Sync.run();
 }
