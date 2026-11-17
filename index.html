@@ -15,7 +15,8 @@
 <style>
 :root{
   --bg:#0E0E10; --s1:#18181B; --s2:#27272A; --line:#27272A; --line2:#3F3F46;
-  --tx:#F4F4F5; --mut:#A1A1AA; --acc:#10B981; --acc-h:#34D399; --bad:#EF4444;
+  --tx:#F4F4F5; --mut:#A1A1AA; --acc:#10B981; --acc-h:#34D399; --acc-rgb:16,185,129; --ring:#334039; --bad:#EF4444;
+  --t1:#1B2327; --t2:#12241C; --t3:#222C30; --t4:#0F3A2B;
   --r:4px;
   --sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
@@ -63,8 +64,9 @@ section[data-sec]{display:block}
   .blk{padding:16px}
   .colC section[data-sec]{display:flex;flex-direction:column;height:100%}
   .colC #wheelCard{flex:1;display:flex;flex-direction:column}
-  .colC .wheelbox{max-width:min(100%,400px);margin:auto;padding:8px 0}
-  .colC #spinBtn{max-width:400px;margin:0 auto}
+  .colC .wheelbox{width:min(100%,520px,max(260px,calc(100dvh - 440px)));max-width:none;margin:auto;padding:8px 0}
+  .colC .blk{padding:14px 16px}
+  .colC #spinBtn{max-width:520px;margin:0 auto}
   .tabs{display:none!important}
 }
 
@@ -97,16 +99,50 @@ input::placeholder{color:#8A8A93}
 select{appearance:none;padding-right:30px;background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23A1A1AA' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 10px center}
 .colL input[type=text],.colR input[type=text],.colR select{background-color:var(--bg)}
 
+/* Calendrier mensuel */
+.mhead{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.mtitle{flex:1;font-weight:600;font-size:14px;text-align:center}
+.badgerow{margin-bottom:8px}
+.badge{font-family:var(--mono);font-size:12px;border:1px solid var(--acc);color:var(--acc);border-radius:3px;padding:2px 6px}
+.mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.mdow{font-family:var(--mono);font-size:10px;color:var(--mut);text-align:center;padding:2px 0}
+.mc{aspect-ratio:1;display:grid;place-items:center;border:1px solid var(--line);border-radius:3px;background:transparent;color:var(--tx);font-family:var(--mono);font-size:13px;padding:0;min-height:0}
+.mc:hover{border-color:var(--line2)}
+.mc.empty{border:0;visibility:hidden}
+.mc.future{color:#52525B}
+.mc.busy{border-style:dashed;border-color:#52525B;color:var(--mut)}
+.mc.sess{background:var(--acc);border-color:var(--acc);color:#0E0E10;font-weight:700}
+.mc.today{outline:1px solid var(--tx);outline-offset:1px}
+.mc.sel{border-color:var(--tx);border-width:2px}
+.dpanel{display:grid;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.dhead{display:flex;justify-content:space-between;align-items:baseline}
+.dname{font-weight:600}
+.board{margin-top:16px;display:grid;gap:12px}
+.salonhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.brow{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
+.brow.me .pv{color:var(--acc)}
+.brow .rk{font-family:var(--mono);font-size:12px;color:var(--mut);width:18px}
+.brow .pv{font-family:var(--mono);font-size:13px}
+.brow.mut{color:var(--mut);font-size:13px}
+.mono{font-family:var(--mono)}
+.small{font-size:13px}
+.salonrow{align-items:center}
+
+/* Pastilles de thème */
+.swatches{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.swatch{width:32px;height:32px;border-radius:4px;border:0;padding:0;outline:2px solid transparent;outline-offset:2px}
+.swatch.on{outline-color:var(--tx)}
+
 /* Boutons fins */
 .btn{min-height:40px;padding:0 14px;border-radius:var(--r);border:1px solid var(--line2);
   background:transparent;font-size:13px;font-weight:600;color:var(--tx);white-space:nowrap}
 .btn:hover{background:var(--s2)}
 .btn:disabled{opacity:.4;cursor:not-allowed;background:transparent}
 .btn.primary{border-color:var(--acc);color:var(--acc)}
-.btn.primary:hover{border-color:var(--acc-h);color:var(--acc-h);background:rgba(16,185,129,.12)}
+.btn.primary:hover{border-color:var(--acc-h);color:var(--acc-h);background:rgba(var(--acc-rgb),.12)}
 .btn.primary:disabled{border-color:var(--line2);color:var(--mut)}
 .btn.ok{border-color:var(--acc);color:var(--tx)}
-.btn.ok:hover{border-color:var(--acc-h);background:rgba(16,185,129,.12)}
+.btn.ok:hover{border-color:var(--acc-h);background:rgba(var(--acc-rgb),.12)}
 .btn.danger{background:var(--bad);border-color:var(--bad);color:#0E0E10}
 .btn.ghost{border-color:transparent;color:var(--mut)}
 .btn.ghost:hover{color:var(--tx)}
@@ -126,7 +162,7 @@ select{appearance:none;padding-right:30px;background:var(--bg) url("data:image/s
 .grow{flex:1 1 0;min-width:0}
 
 /* Roue */
-.wheelbox{position:relative;width:100%;max-width:300px;margin:12px auto}
+.wheelbox{position:relative;width:100%;max-width:360px;margin:12px auto}
 #wheel{display:block;width:100%;aspect-ratio:1;touch-action:manipulation}
 .ptr{position:absolute;left:50%;top:-4px;transform:translateX(-50%);width:0;height:0;
   border-left:7px solid transparent;border-right:7px solid transparent;border-top:14px solid var(--acc);z-index:2}
@@ -328,6 +364,15 @@ const CONFIG = {
   row: 'moi'
 };
 
+/* Thèmes d'accentuation : une teinte d'accent, quatre teintes de fond pour la roue, une couleur de séparation */
+const THEMES = {
+  emerald: { name: 'Émeraude', acc: '#10B981', hover: '#34D399', rgb: '16,185,129', ring: '#334039', tones: ['#1B2327', '#12241C', '#222C30', '#0F3A2B'] },
+  amber:   { name: 'Ambre',    acc: '#F59E0B', hover: '#FBBF24', rgb: '245,158,11',  ring: '#3D3A33', tones: ['#24221E', '#2A2212', '#2B2722', '#3D2D0E'] },
+  steel:   { name: 'Bleu acier', acc: '#60A5FA', hover: '#93C5FD', rgb: '96,165,250', ring: '#2F3A45', tones: ['#1B2026', '#121C2A', '#222A33', '#0F2C44'] },
+  violet:  { name: 'Violet',   acc: '#A78BFA', hover: '#C4B5FD', rgb: '167,139,250', ring: '#3A3350', tones: ['#1F1D26', '#1C1433', '#27242F', '#2E1F52'] },
+  coral:   { name: 'Corail',   acc: '#FB7185', hover: '#FDA4AF', rgb: '251,113,133', ring: '#45313A', tones: ['#241F20', '#2A1518', '#2E2527', '#4A1D25'] }
+};
+
 const LS_KEY = 'focusflow.v1';
 const LS_TAB = 'focusflow.tab';
 
@@ -339,6 +384,9 @@ const defaultState = () => ({
   quests: [],              // {id,name,freq:'daily'|'weekly',log:{clé:true},created}
   busy: {},                // {'YYYY-MM-DD': 'raison'}  soirées occupées
   wheelRot: 0,
+  theme: 'emerald',
+  pseudo: '',
+  salons: [],
   history: []              // anciens focus {week,name}
 });
 
@@ -354,6 +402,9 @@ function normalize(s) {
   out.sessions = obj(s.sessions);
   out.focus = s.focus && typeof s.focus === 'object' && s.focus.week ? s.focus : null;
   out.wheelRot = Number(s.wheelRot) || 0;
+  out.theme = THEMES[s.theme] ? s.theme : 'emerald';
+  out.pseudo = String(s.pseudo || '').slice(0, 20);
+  out.salons = Array.isArray(s.salons) ? s.salons.filter(c => /^[A-Z0-9]{6}$/.test(c)).slice(0, 10) : [];
   out.updatedAt = Number(s.updatedAt) || 0;
   out.history = Array.isArray(s.history) ? s.history.slice(-52) : [];
   return out;
@@ -378,6 +429,7 @@ function loadState(scope = 'local') {
 
 let activeScope = 'local';
 let state = loadState();
+applyTheme(state.theme);
 
 /* touch: met à jour le timestamp ; push: déclenche la synchro distante */
 function save(touch = true, push = true) {
@@ -437,6 +489,7 @@ const Sync = {
         await Remote.push(this.cfg, state);
         this.setStatus('ok', 'Synchronisé à ' + hour());
       } else this.setStatus('ok', 'Synchronisé à ' + hour());
+      await Salons.publish(); Salons.refresh();
     } catch (e) { this.setStatus('err', 'Erreur : ' + e.message); }
     finally { this.busy = false; renderAcct(); }
   }
@@ -492,6 +545,7 @@ const Auth = {
     this.first = new Promise(res => {
       a.onAuthStateChanged(u => {
         this.user = u; switchScope(u ? u.uid : 'local'); res(); renderAcct();
+        if (u && !state.pseudo) setTimeout(() => toast('Choisis ton pseudo dans ⚙ pour les salons'), 800);
         if (u) Sync.run(); else Sync.setStatus('off', 'Connexion Google requise');
       });
     });
@@ -557,12 +611,6 @@ async function emergencyUnlock() {
   });
   if (!ok) return;
   state.focus = null; save(); renderAll(); toast('Roue déverrouillée');
-}
-
-function toggleSession() {
-  const k = today();
-  if (state.sessions[k]) delete state.sessions[k]; else state.sessions[k] = true;
-  save(); renderFocus(); renderWeek();
 }
 
 /* Streaks — les soirées occupées sont « neutres » : ni points, ni cassure */
@@ -667,7 +715,7 @@ function renderFocus() {
     ] : h('div', { class: 'mut' }, 'Projet supprimé'),
     h('div', { class: 'prog' }, segs, h('span', { class: 'cnt' }, `${done}/${target}`)),
     h('div', { class: 'acts' },
-      h('button', { class: 'btn block ' + (state.sessions[k] ? 'ok' : 'primary'), onclick: toggleSession },
+      h('button', { class: 'btn block ' + (state.sessions[k] ? 'ok' : 'primary'), onclick: () => toggleSession() },
         state.sessions[k] ? 'Session validée ✓ · annuler' : 'Valider ma session du jour (30-60 min)')),
     isBusy(k) ? h('span', { class: 'tag' }, 'Soirée occupée' + (state.busy[k] ? ' · ' + state.busy[k] : '')) : null
   );
@@ -744,29 +792,183 @@ function renderQuests() {
   );
 }
 
+/* ---------- 4b. Points, calendrier mensuel et salons ----------
+   Les points sont recalculés à partir des données : ils repartent donc à zéro chaque mois. */
+const POINTS = { session: 10, questDay: 2, questWeek: 2 };
+const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+const ymKey = (y, m) => `${y}-${pad(m + 1)}`;
+const daysOfMonth = (y, m) => Array.from({ length: new Date(y, m + 1, 0).getDate() }, (_, i) => new Date(y, m, i + 1));
+const nowMonth = () => { const t = new Date(); return { y: t.getFullYear(), m: t.getMonth() }; };
+
+/* Bonus quêtes : toutes les quêtes quotidiennes créées avant ce jour faites = 2 pts, une seule fois par jour */
+function dayPoints(d) {
+  const k = dkey(d);
+  let p = state.sessions[k] ? POINTS.session : 0;
+  const dailies = state.quests.filter(q => q.freq === 'daily' && q.created <= k);
+  if (dailies.length && dailies.every(q => q.log[k])) p += POINTS.questDay;
+  return p;
+}
+/* Même principe pour les quêtes hebdomadaires, attribué au lundi de la semaine */
+function weekBonus(monday) {
+  const k = dkey(monday);
+  const weeklies = state.quests.filter(q => q.freq === 'weekly' && q.created <= k);
+  return weeklies.length && weeklies.every(q => q.log[k]) ? POINTS.questWeek : 0;
+}
+function monthPoints(y, m) {
+  return daysOfMonth(y, m).reduce((sum, d) => sum + dayPoints(d) + (d.getDay() === 1 ? weekBonus(d) : 0), 0);
+}
+function weekSessions(monday) { let n = 0; for (let i = 0; i < 7; i++) if (state.sessions[dkey(addDays(monday, i))]) n++; return n; }
+const badgeOf = n => n >= 7 ? 'Or' : n >= 5 ? 'Argent' : n >= 3 ? 'Bronze' : '';
+
+let viewMonth = (() => { const { y, m } = nowMonth(); return new Date(y, m, 1); })();
+let selDay = today();
+
+function shiftMonth(n) {
+  viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + n, 1);
+  const { y, m } = nowMonth();
+  selDay = viewMonth.getFullYear() === y && viewMonth.getMonth() === m ? today() : dkey(viewMonth);
+  renderWeek();
+}
+
+function toggleSession(k = today()) {
+  if (state.sessions[k]) delete state.sessions[k]; else state.sessions[k] = true;
+  save(); renderFocus(); renderWeek();
+}
+
 function renderWeek() {
-  const box = $('#weekCard');
-  const days = weekDates(), t = today();
-  const chips = h('div', { class: 'days' }, days.map((d, i) => {
-    const k = dkey(d), b = isBusy(k), s = !!state.sessions[k];
-    return h('button', { class: 'day' + (b ? ' busy' : '') + (k === t ? ' today' : '') + (s ? ' sess' : ''), 'aria-pressed': b, 'aria-label': `${DAY_NAMES[i]} ${d.getDate()} : ${b ? 'soirée occupée' : 'libre'}`, onclick: () => toggleBusy(k) },
-      h('span', { class: 'dn' }, DAY_NAMES[i]), h('span', { class: 'dd' }, d.getDate()),
-      h('span', { class: 'ds' }, b ? 'Occupée' : s ? 'Fait' : 'Libre'));
-  }));
-  const busyDays = days.filter(d => isBusy(dkey(d)));
+  const box = $('#weekCard'); if (!box) return;
+  const y = viewMonth.getFullYear(), m = viewMonth.getMonth(), t = today();
+  const days = daysOfMonth(y, m), cells = [];
+  for (let i = 0; i < (days[0].getDay() + 6) % 7; i++) cells.push(h('span', { class: 'mc empty' }));
+  days.forEach(d => {
+    const k = dkey(d);
+    const cls = 'mc' + (state.sessions[k] ? ' sess' : '') + (isBusy(k) ? ' busy' : '') + (k === t ? ' today' : '') + (k > t ? ' future' : '') + (k === selDay ? ' sel' : '');
+    cells.push(h('button', { class: cls, type: 'button', 'aria-label': `${d.getDate()} ${MONTHS[m]}`, 'aria-pressed': k === selDay, onclick: () => { selDay = k; renderWeek(); } }, d.getDate()));
+  });
+  const badge = badgeOf(weekSessions(mondayOf(new Date())));
   put(box,
-    sh('Calendrier', h('span', { class: 'cnt' }, `${sessionsDone()}/${weekTarget()}`)),
-    chips,
-    busyDays.length ? h('div', { class: 'reasons' }, busyDays.map(d => {
-      const k = dkey(d);
-      return h('label', {}, h('b', {}, DAY_NAMES[(d.getDay() + 6) % 7] + ' ' + d.getDate()),
-        h('input', { type: 'text', value: state.busy[k] || '', placeholder: 'Raison (ex. Stream)', dataset: { reason: k }, maxLength: 60,
-          oninput: e => { state.busy[k] = e.target.value; save(); renderFocus(); } }));
-    })) : null
-  );
+    sh('Calendrier', h('span', { class: 'cnt' }, `${monthPoints(y, m)} pts`)),
+    h('div', { class: 'mhead' },
+      h('button', { class: 'btn ghost sq', type: 'button', 'aria-label': 'Mois précédent', onclick: () => shiftMonth(-1) }, '‹'),
+      h('span', { class: 'mtitle' }, `${MONTHS[m]} ${y}`),
+      h('button', { class: 'btn ghost sq', type: 'button', 'aria-label': 'Mois suivant', onclick: () => shiftMonth(1) }, '›')),
+    badge ? h('div', { class: 'badgerow' }, h('span', { class: 'badge' }, 'Semaine · ' + badge)) : null,
+    h('div', { class: 'mgrid' }, ['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(x => h('span', { class: 'mdow' }, x)), cells),
+    dayPanel(selDay),
+    boardBox());
+  Salons.refresh();
+}
+
+function dayPanel(k) {
+  const [y, mo, dd] = k.split('-').map(Number), d = new Date(y, mo - 1, dd);
+  const sess = !!state.sessions[k], busy = isBusy(k);
+  return h('div', { class: 'dpanel' },
+    h('div', { class: 'dhead' },
+      h('span', { class: 'dname' }, `${DAY_NAMES[(d.getDay() + 6) % 7]} ${dd} ${MONTHS[mo - 1].toLowerCase()}`),
+      h('span', { class: 'cnt' }, `${dayPoints(d)} pts`)),
+    h('div', { class: 'acts' },
+      h('button', { class: 'btn grow ' + (sess ? 'ok' : 'primary'), type: 'button', disabled: k > today() && !sess, onclick: () => toggleSession(k) },
+        sess ? 'Session validée ✓' : 'Valider la session'),
+      h('button', { class: 'btn grow', type: 'button', onclick: () => toggleBusy(k) }, busy ? 'Retirer soir occupé' : 'Soir occupé')),
+    busy ? h('input', { type: 'text', value: state.busy[k] || '', placeholder: 'Raison (ex. Stream)', maxLength: 60, 'aria-label': 'Raison de la soirée occupée',
+      oninput: e => { state.busy[k] = e.target.value; save(); } }) : null);
+}
+
+/* ----- Salons : espace partagé, lisible uniquement par les membres ----- */
+function boardBox() {
+  if (!state.salons.length) return h('div', { class: 'board' }, h('p', { class: 'mut small', style: 'margin:0' }, 'Aucun salon. Crée-en un ou rejoins-en un depuis ⚙.'));
+  return h('div', { class: 'board', id: 'board' }, state.salons.map(code => h('div', { class: 'salon', dataset: { salon: code } },
+    h('div', { class: 'salonhead' }, h('span', { class: 'lbl' }, 'Salon ' + code), h('span', { class: 'mut small' }, MONTHS[viewMonth.getMonth()])),
+    h('ol', { class: 'rows' }, Salons.rows(code)))));
+}
+
+const Salons = {
+  cache: {}, stamp: 0,
+  base: () => Sync.cfg.url.replace(/\/$/, ''),
+  async token() { await Remote.loggedIn(Sync.cfg); return Auth.user.getIdToken(); },
+  check(r) { if (!r.ok) throw new Error('Firebase ' + r.status); return r; },
+  rows(code) {
+    const data = this.cache[code + '|' + ymKey(viewMonth.getFullYear(), viewMonth.getMonth())];
+    if (!Auth.user) return h('li', { class: 'brow mut' }, 'Connecte-toi pour voir le classement');
+    if (data === undefined) return h('li', { class: 'brow mut' }, 'Chargement…');
+    if (data === 'err') return h('li', { class: 'brow mut' }, 'Classement indisponible, réessaie plus tard');
+    if (!data.length) return h('li', { class: 'brow mut' }, 'Pas encore de points ce mois-ci');
+    return data.map((r, i) => h('li', { class: 'brow' + (r.uid === Auth.user.uid ? ' me' : '') },
+      h('span', { class: 'rk' }, String(i + 1)), h('span', { class: 'grow' }, r.pseudo), h('span', { class: 'pv' }, `${r.pts} pts`)));
+  },
+  paint() { $$('#board .salon').forEach(el => put(el.querySelector('ol'), this.rows(el.dataset.salon))); },
+  async refresh() {
+    if (!Auth.user || !state.salons.length) return;
+    const mk = ymKey(viewMonth.getFullYear(), viewMonth.getMonth());
+    if (Date.now() - this.stamp < 20000 && state.salons.every(c => this.cache[c + '|' + mk] !== undefined)) return;
+    this.stamp = Date.now();
+    for (const code of state.salons) {
+      try {
+        const t = await this.token();
+        const r = this.check(await fetch(`${this.base()}/salons/${encodeURIComponent(code)}/scores/${mk}.json?auth=${encodeURIComponent(t)}`));
+        const data = (await r.json()) || {};
+        this.cache[code + '|' + mk] = Object.entries(data)
+          .map(([uid, v]) => ({ uid, pseudo: (v && v.pseudo) || 'Anonyme', pts: Number(v && v.pts) || 0 }))
+          .sort((a, b) => b.pts - a.pts);
+      } catch (e) { this.cache[code + '|' + mk] = 'err'; }
+    }
+    this.paint();
+  },
+  /* Envoie mon membership et mon score du mois en cours dans chaque salon */
+  async publish() {
+    if (!Auth.user || !state.salons.length) return;
+    try {
+      const t = await this.token(), { y, m } = nowMonth(), mk = ymKey(y, m);
+      const pseudo = state.pseudo || 'Anonyme', pts = monthPoints(y, m), uid = encodeURIComponent(Auth.user.uid);
+      for (const code of state.salons) {
+        const b = `${this.base()}/salons/${encodeURIComponent(code)}`, q = `?auth=${encodeURIComponent(t)}`;
+        this.check(await fetch(`${b}/members/${uid}.json${q}`, { method: 'PUT', body: JSON.stringify({ pseudo }) }));
+        this.check(await fetch(`${b}/scores/${mk}/${uid}.json${q}`, { method: 'PUT', body: JSON.stringify({ pseudo, pts }) }));
+      }
+      this.stamp = 0;
+    } catch (e) { /* le classement se mettra à jour à la prochaine synchro */ }
+  },
+  async leave(code) {
+    state.salons = state.salons.filter(c => c !== code); save();
+    try {
+      const t = await this.token(), { y, m } = nowMonth(), uid = encodeURIComponent(Auth.user.uid);
+      const b = `${this.base()}/salons/${encodeURIComponent(code)}`, q = `?auth=${encodeURIComponent(t)}`;
+      await fetch(`${b}/scores/${ymKey(y, m)}/${uid}.json${q}`, { method: 'DELETE' });
+      await fetch(`${b}/members/${uid}.json${q}`, { method: 'DELETE' });
+    } catch (e) { /* rien à nettoyer si hors-ligne */ }
+  }
+};
+
+function joinSalon(raw) {
+  const code = String(raw || '').trim().toUpperCase();
+  if (!/^[A-Z0-9]{6}$/.test(code)) { toast('Code invalide : 6 lettres ou chiffres'); return; }
+  if (!Auth.user) { toast('Connecte-toi d’abord'); return; }
+  if (state.salons.includes(code)) { toast('Tu es déjà dans ce salon'); return; }
+  state.salons = [...state.salons, code]; save();
+  toast('Salon ajouté'); renderWeek(); Sync.run(); reopenData();
+}
+function createSalon() {
+  if (!Auth.user) { toast('Connecte-toi d’abord'); return; }
+  const alpha = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  joinSalon(Array.from(crypto.getRandomValues(new Uint8Array(6)), b => alpha[b % alpha.length]).join(''));
+}
+async function leaveSalon(code) {
+  if (!await ask({ title: `Quitter le salon ${code} ?`, text: 'Ton score de ce mois disparaîtra du classement.', ok: 'Quitter', danger: true })) return;
+  await Salons.leave(code); renderWeek(); reopenData();
+}
+function copyCode(code) {
+  const done = () => toast('Code copié'), fail = () => toast(code);
+  if (navigator.clipboard) navigator.clipboard.writeText(code).then(done, fail); else fail();
+}
+
+function applyTheme(name) {
+  const t = THEMES[name] || THEMES.emerald, st = document.documentElement.style;
+  st.setProperty('--acc', t.acc); st.setProperty('--acc-h', t.hover); st.setProperty('--acc-rgb', t.rgb); st.setProperty('--ring', t.ring);
+  t.tones.forEach((c, i) => st.setProperty('--t' + (i + 1), c));
 }
 
 function renderAll() {
+  applyTheme(state.theme);
   renderFocus(); renderProjects(); renderQuests(); renderWeek(); renderOnboarding(); updateWheelUI();
   requestAnimationFrame(drawWheel);
 }
@@ -780,7 +982,8 @@ function drawWheel() {
   if (cv.width !== px) { cv.width = px; cv.height = px; }
   const ctx = cv.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, size, size);
-  const ACC = '#10B981', BG = '#0E0E10', TX = '#F4F4F5', MUT = '#A1A1AA', RING = '#334039', TONES = ['#1B2327', '#12241C', '#222C30', '#0F3A2B'];
+  const cs = getComputedStyle(document.documentElement), cssv = n => cs.getPropertyValue(n).trim();
+  const ACC = cssv('--acc'), BG = '#0E0E10', TX = '#F4F4F5', MUT = '#A1A1AA', RING = cssv('--ring'), TONES = [cssv('--t1'), cssv('--t2'), cssv('--t3'), cssv('--t4')];
   const SANS = 'Inter,-apple-system,"Segoe UI",system-ui,sans-serif', MONO = 'ui-monospace,Menlo,Consolas,monospace';
   const c = size / 2, R = c - 2, list = activeProjects(), n = list.length;
   if (n === 0) {
@@ -903,6 +1106,19 @@ function renderOnboarding() {
       step(s, 'Valider une session', 'Ouvrir', () => $('#focusCard').scrollIntoView({ block: 'center' }), !focusActive())));
 }
 
+/* Pastilles de couleur : le choix est enregistré dans le compte, donc identique sur PC et téléphone */
+function themeRow() {
+  const keys = Object.keys(THEMES);
+  return h('div', { class: 'swatches', id: 'swatches' }, keys.map(k => h('button', {
+    type: 'button', class: 'swatch' + (state.theme === k ? ' on' : ''), title: THEMES[k].name, 'aria-label': THEMES[k].name,
+    'aria-pressed': state.theme === k, style: `background:${THEMES[k].acc}`,
+    onclick: () => {
+      state.theme = k; save(); applyTheme(k); renderAll();
+      $$('#swatches .swatch').forEach((b, i) => { const on = keys[i] === k; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    }
+  })));
+}
+
 /* Réglages : sauvegarde, compte et état de la synchro. Aucun champ technique. */
 function openData() {
   const d = $('#dataDlg');
@@ -911,6 +1127,20 @@ function openData() {
     h('h4', {}, 'Compte'),
     h('div', { class: 'acct', id: 'acct' }),
     h('div', { class: 'status', id: 'syncStatus' }, Sync.last),
+    h('label', {}, h('span', { class: 'lbl' }, 'Pseudo (visible dans les salons)'),
+      h('input', { type: 'text', value: state.pseudo, maxLength: 20, placeholder: 'Ton pseudo', 'aria-label': 'Pseudo',
+        onchange: e => { state.pseudo = e.target.value.trim().slice(0, 20); save(); toast('Pseudo enregistré'); } })),
+    h('h4', {}, 'Salons'),
+    h('button', { class: 'btn primary block', type: 'button', onclick: createSalon }, 'Créer un salon'),
+    h('form', { class: 'addrow', onsubmit: e => { e.preventDefault(); joinSalon(e.target.elements.code.value); } },
+      h('input', { name: 'code', type: 'text', placeholder: 'Code à 6 caractères', maxLength: 6, 'aria-label': 'Code du salon' }),
+      h('button', { class: 'btn', type: 'submit' }, 'Rejoindre')),
+    state.salons.map(c => h('div', { class: 'row salonrow' },
+      h('span', { class: 'grow mono' }, c),
+      h('button', { class: 'btn ghost', type: 'button', onclick: () => copyCode(c) }, 'Copier'),
+      h('button', { class: 'btn ghost', type: 'button', onclick: () => leaveSalon(c) }, 'Quitter'))),
+    h('h4', {}, 'Apparence'),
+    themeRow(),
     h('h4', {}, 'Sauvegarde'),
     h('div', { class: 'row wrapr' },
       h('button', { class: 'btn grow', type: 'button', onclick: exportData }, 'Exporter'),
@@ -920,6 +1150,7 @@ function openData() {
       h('button', { class: 'btn ghost', type: 'button', onclick: () => d.close() }, 'Fermer')));
   d.replaceChildren(form); renderAcct(); d.showModal();
 }
+function reopenData() { const d = $('#dataDlg'); if (d.open) d.close(); openData(); }
 
 /* Navigation par onglets (mobile) */
 function setTab(t) {
