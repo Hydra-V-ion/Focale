@@ -53,7 +53,8 @@ section[data-sec]{display:block}
   body:not([data-tab]) section:not([data-sec=focus]),
   body[data-tab=focus] section:not([data-sec=focus]),
   body[data-tab=quests] section:not([data-sec=quests]),
-  body[data-tab=week] section:not([data-sec=week]){display:none}
+  body[data-tab=week] section:not([data-sec=week]),
+  body[data-tab=profile] section:not([data-sec=profile]){display:none}
 }
 @media (min-width:960px){
   .app{display:grid;grid-template-columns:minmax(0,24fr) minmax(0,46fr) minmax(0,30fr);height:calc(100dvh - 48px);min-height:0;padding-bottom:0}
@@ -70,6 +71,11 @@ section[data-sec]{display:block}
   .colC #spinBtn{max-width:640px;margin:0 auto}
   .tabs{display:none!important}
 }
+
+/* Carte Profil */
+.idrow{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.avatar{width:44px;height:44px;flex:none;display:grid;place-items:center;border:1px solid var(--line2);color:var(--acc);font-family:var(--mono);font-size:18px}
+.pname{font-weight:600;font-size:15px}
 
 /* En-têtes de section */
 .sh{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:24px;margin-bottom:8px}
@@ -240,7 +246,7 @@ select{appearance:none;padding-right:30px;background:var(--bg) url("data:image/s
 .reasons label b{min-width:52px;font-family:var(--mono);font-size:12px;color:var(--mut);font-weight:500}
 
 /* Navigation mobile */
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(3,1fr);
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(4,1fr);
   background:var(--bg);border-top:1px solid var(--line);padding:0 0 env(safe-area-inset-bottom)}
 .tabs button{background:none;border:0;border-top:2px solid transparent;min-height:56px;color:var(--mut);display:grid;
   gap:2px;justify-items:center;align-content:center;font-size:13px;font-weight:600}
@@ -293,6 +299,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   <div class="colL">
     <section data-sec="focus"><div class="blk" id="projCard"></div></section>
     <section data-sec="quests"><div class="blk" id="questCard"></div></section>
+    <section data-sec="profile"><div class="blk" id="profCard"></div></section>
   </div>
   <div class="colC">
     <section data-sec="focus">
@@ -317,6 +324,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   <button role="tab" data-go="focus"><span class="ic">◎</span>Focus</button>
   <button role="tab" data-go="quests"><span class="ic">✓</span>Quêtes</button>
   <button role="tab" data-go="week"><span class="ic">☾</span>Calendrier</button>
+  <button role="tab" data-go="profile"><span class="ic">◉</span>Profil</button>
 </nav>
 
 <dialog id="dlg"></dialog>
@@ -461,7 +469,7 @@ function save(touch = true, push = true) {
   if (touch) state.updatedAt = Date.now();
   try { localStorage.setItem(keyFor(activeScope), JSON.stringify(state)); }
   catch (e) { toast('Stockage local indisponible'); }
-  renderOnboarding();
+  renderOnboarding(); renderProfile();
   if (push) Sync.schedulePush();
 }
 
@@ -879,6 +887,39 @@ function toggleSession(k = today()) {
   save(); renderFocus(); renderWeek();
 }
 
+/* Profil : identité, totaux personnels (Mérite inclus, hors classement) */
+function firstDay() {
+  const ks = [...Object.keys(state.sessions), ...Object.keys(state.busy), ...state.quests.map(q => q.created), ...state.merit.map(t => t.at)]
+    .filter(k => typeof k === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+  return ks[0] || today();
+}
+function renderProfile() {
+  const box = $('#profCard'); if (!box) return;
+  const { y, m } = nowMonth(), sessKeys = Object.keys(state.sessions).sort();
+  const { cur, best } = streaks(sessKeys);
+  const pseudo = state.pseudo.trim(), u = Auth.user;
+  const [fy, fm, fd] = firstDay().split('-');
+  const badge = badgeOf(weekSessions(mondayOf(new Date())));
+  const tile = (label, value) => h('div', { class: 'tile' }, h('span', { class: 'tl' }, label), h('span', { class: 'tv' }, String(value)));
+  put(box,
+    sh('Profil', h('span', { class: 'cnt' }, u ? 'Compte Google' : 'Mode local')),
+    h('div', { class: 'idrow' },
+      h('span', { class: 'avatar', 'aria-hidden': 'true' }, (pseudo || '?').charAt(0).toUpperCase()),
+      h('div', { class: 'grow' },
+        h('div', { class: 'pname' }, pseudo || 'Sans pseudo'),
+        h('div', { class: 'mut small' }, `Depuis le ${+fd} ${MONTHS[+fm - 1]} ${fy}`)),
+      h('button', { class: 'btn ghost', type: 'button', onclick: openData }, 'Modifier')),
+    badge ? h('div', { class: 'badgerow' }, h('span', { class: 'badge' }, 'Semaine · ' + badge)) : null,
+    h('div', { class: 'tiles' },
+      tile('Mérite total', state.merit.length),
+      tile('Points au total', totalPoints()),
+      tile('Points ce mois', monthPoints(y, m)),
+      tile('Jours validés', sessKeys.length),
+      tile('Série en cours', cur + ' j'),
+      tile('Meilleure série', best + ' j')),
+    h('p', { class: 'mut small', style: 'margin:0' }, `Salons : ${state.salons.length ? state.salons.join(', ') : 'aucun'}`));
+}
+
 function renderWeek() {
   const box = $('#weekCard'); if (!box) return;
   const y = viewMonth.getFullYear(), m = viewMonth.getMonth(), t = today();
@@ -1067,7 +1108,7 @@ function applyTheme(name) {
 
 function renderAll() {
   applyTheme(state.theme);
-  renderFocus(); renderProjects(); renderQuests(); renderWeek(); renderOnboarding(); updateWheelUI();
+  renderFocus(); renderProjects(); renderQuests(); renderWeek(); renderOnboarding(); renderProfile(); updateWheelUI();
   requestAnimationFrame(drawWheel);
 }
 
@@ -1304,7 +1345,7 @@ function init() {
   $('#dataBtn').addEventListener('click', openData);
   $$('.tabs button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.go)));
   let t0 = 'focus'; try { t0 = localStorage.getItem(LS_TAB) || 'focus'; } catch (e) {}
-  setTab(['focus', 'quests', 'week'].includes(t0) ? t0 : 'focus');
+  setTab(['focus', 'quests', 'week', 'profile'].includes(t0) ? t0 : 'focus');
   const newWeek = rollover();
   renderAll();
   if (newWeek) toast('Nouvelle semaine : la roue est déverrouillée');
