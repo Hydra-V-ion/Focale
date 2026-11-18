@@ -406,7 +406,9 @@ const defaultState = () => ({
   theme: 'emerald',
   pseudo: '',
   salons: [],
-  history: []              // anciens focus {week,name}
+  history: [],             // anciens focus {week,name}
+  tasks: [],               // {id,name}  tâches rapides à faire (1 pt chacune)
+  merit: []                // {id,name,at}  tâches rapides archivées : total Mérite (hors classement)
 });
 
 function normalize(s) {
@@ -426,6 +428,10 @@ function normalize(s) {
   out.salons = Array.isArray(s.salons) ? s.salons.filter(c => /^[A-Z0-9]{6}$/.test(c)).slice(0, 10) : [];
   out.updatedAt = Number(s.updatedAt) || 0;
   out.history = Array.isArray(s.history) ? s.history.slice(-52) : [];
+  out.tasks = (Array.isArray(s.tasks) ? s.tasks : []).filter(t => t && t.name != null)
+    .map(t => ({ id: String(t.id || uid()), name: String(t.name).slice(0, 80) }));
+  out.merit = (Array.isArray(s.merit) ? s.merit : []).filter(t => t && t.name != null)
+    .map(t => ({ id: String(t.id || uid()), name: String(t.name), at: t.at || today() }));
   return out;
 }
 
@@ -665,6 +671,14 @@ function toggleQuest(id) {
   save(); renderQuests();
 }
 
+/* Tâche rapide : terminée = archivée et comptée dans le total Mérite (pas de jour, pas de classement) */
+function completeTask(id) {
+  const t = state.tasks.find(x => x.id === id); if (!t) return;
+  state.tasks = state.tasks.filter(x => x.id !== id);
+  state.merit.push({ id: t.id, name: t.name, at: today() });
+  save(); renderQuests(); renderWeek();
+}
+
 function toggleBusy(k) {
   if (isBusy(k)) delete state.busy[k]; else state.busy[k] = '';
   save(); renderAll();
@@ -807,7 +821,18 @@ function renderQuests() {
     } },
       h('input', { name: 'n', type: 'text', placeholder: 'Nouvelle quête', maxLength: 80, 'aria-label': 'Nouvelle quête' }),
       h('select', { name: 'f', 'aria-label': 'Fréquence' }, h('option', { value: 'daily' }, 'Quotidienne'), h('option', { value: 'weekly' }, 'Hebdo')),
-      h('button', { class: 'btn primary sq', type: 'submit', 'aria-label': 'Ajouter la quête' }, '+'))
+      h('button', { class: 'btn primary sq', type: 'submit', 'aria-label': 'Ajouter la quête' }, '+')),
+    h('div', { class: 'grp' }, 'Tâches rapides · 1 pt'),
+    state.tasks.length ? h('ul', { class: 'rows' }, state.tasks.map(t => h('li', { class: 'qrow' },
+      h('button', { class: 'check', role: 'checkbox', 'aria-checked': 'false', 'aria-label': 'Terminer « ' + t.name + ' »', onclick: () => completeTask(t.id) }, ''),
+      h('div', { class: 'grow' }, h('input', { type: 'text', class: 'flat', value: t.name, 'aria-label': 'Nom de la tâche', oninput: e => { t.name = e.target.value; save(); } })),
+      h('button', { class: 'del', 'aria-label': 'Supprimer la tâche', onclick: () => { state.tasks = state.tasks.filter(x => x.id !== t.id); save(); renderQuests(); } }, '✕')))) : null,
+    h('form', { class: 'addrow', onsubmit: e => {
+      e.preventDefault(); const v = e.target.elements.n.value.trim(); if (!v) return;
+      state.tasks.push({ id: uid(), name: v }); save(); renderQuests();
+    } },
+      h('input', { name: 'n', type: 'text', placeholder: 'Tâche rapide', maxLength: 80, 'aria-label': 'Nouvelle tâche rapide' }),
+      h('button', { class: 'btn primary sq', type: 'submit', 'aria-label': 'Ajouter la tâche rapide' }, '+'))
   );
 }
 
@@ -937,6 +962,7 @@ function statsBox() {
       tile('Série en cours', cur + ' j'),
       tile('Meilleure série', best + ' j'),
       tile('Quêtes faites', questDone),
+      tile('Mérite total', state.merit.length),
       tile('Jours occupés', Object.keys(state.busy).length)),
     h('div', { class: 'bars' },
       h('span', { class: 'lbl' }, 'Points par mois (12 derniers)'),
