@@ -895,12 +895,9 @@ function firstDay() {
 }
 function renderProfile() {
   const box = $('#profCard'); if (!box) return;
-  const { y, m } = nowMonth(), sessKeys = Object.keys(state.sessions).sort();
-  const { cur, best } = streaks(sessKeys);
   const pseudo = state.pseudo.trim(), u = Auth.user;
   const [fy, fm, fd] = firstDay().split('-');
   const badge = badgeOf(weekSessions(mondayOf(new Date())));
-  const tile = (label, value) => h('div', { class: 'tile' }, h('span', { class: 'tl' }, label), h('span', { class: 'tv' }, String(value)));
   put(box,
     sh('Profil', h('span', { class: 'cnt' }, u ? 'Compte Google' : 'Mode local')),
     h('div', { class: 'idrow' },
@@ -910,13 +907,7 @@ function renderProfile() {
         h('div', { class: 'mut small' }, `Depuis le ${+fd} ${MONTHS[+fm - 1]} ${fy}`)),
       h('button', { class: 'btn ghost', type: 'button', onclick: openData }, 'Modifier')),
     badge ? h('div', { class: 'badgerow' }, h('span', { class: 'badge' }, 'Semaine · ' + badge)) : null,
-    h('div', { class: 'tiles' },
-      tile('Mérite total', state.merit.length),
-      tile('Points au total', totalPoints()),
-      tile('Points ce mois', monthPoints(y, m)),
-      tile('Jours validés', sessKeys.length),
-      tile('Série en cours', cur + ' j'),
-      tile('Meilleure série', best + ' j')),
+    statsBox(),
     h('p', { class: 'mut small', style: 'margin:0' }, `Salons : ${state.salons.length ? state.salons.join(', ') : 'aucun'}`));
 }
 
@@ -940,7 +931,6 @@ function renderWeek() {
     badge ? h('div', { class: 'badgerow' }, h('span', { class: 'badge' }, 'Semaine · ' + badge)) : null,
     h('div', { class: 'mgrid' }, ['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(x => h('span', { class: 'mdow' }, x)), cells),
     dayPanel(selDay),
-    statsBox(),
     boardBox());
   Salons.refresh();
 }
@@ -993,8 +983,7 @@ function statsBox() {
   for (let i = 11; i >= 0; i--) { const d = new Date(y, m - i, 1); months.push({ label: MONTHS[d.getMonth()].slice(0, 3), pts: monthPoints(d.getFullYear(), d.getMonth()) }); }
   const max = Math.max(1, ...months.map(x => x.pts));
   const tile = (label, value) => h('div', { class: 'tile' }, h('span', { class: 'tl' }, label), h('span', { class: 'tv' }, String(value)));
-  return h('details', { class: 'stats', open: statsOpen, ontoggle: e => { statsOpen = e.target.open; } },
-    h('summary', {}, 'Statistiques'),
+  return h('div', { class: 'stats' },
     h('div', { class: 'tiles' },
       tile('Points ce mois', monthPoints(y, m)),
       tile('Points au total', totalPoints()),
