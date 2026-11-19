@@ -86,6 +86,9 @@ section[data-sec]{display:block}
 .tout{font-family:var(--mono);font-size:24px;letter-spacing:.02em}
 .tpre{display:flex;gap:6px;flex-wrap:wrap}
 .tpre .btn{min-height:36px;padding:0 12px}
+.tcustom{display:flex;gap:6px}
+.tcustom input{width:72px;min-height:36px;padding:0 8px}
+.tcustom .btn{min-height:36px;padding:0 12px}
 
 /* Carte Profil */
 .idrow{display:flex;align-items:center;gap:12px;margin-bottom:12px}
@@ -808,7 +811,15 @@ function renderTimer() {
   put(row,
     h('span', { class: 'tout', id: 'timerOut' }, idle ? '--:--' : fmtTime(timerLeft())),
     idle
-      ? h('div', { class: 'tpre' }, [15, 25, 45].map(n => h('button', { class: 'btn', type: 'button', onclick: () => timerStart(n) }, n + ' min')))
+      ? h('div', { class: 'tpre' },
+          [15, 25, 45].map(n => h('button', { class: 'btn', type: 'button', onclick: () => timerStart(n) }, n + ' min')),
+          h('form', { class: 'tcustom', onsubmit: e => {
+            e.preventDefault();
+            const v = parseInt(e.target.elements.m.value, 10);
+            if (v >= 1 && v <= 180) timerStart(v); else toast('Durée entre 1 et 180 min');
+          } },
+            h('input', { name: 'm', type: 'number', min: '1', max: '180', inputMode: 'numeric', placeholder: 'min', 'aria-label': 'Durée en minutes' }),
+            h('button', { class: 'btn', type: 'submit' }, 'Lancer')))
       : h('div', { class: 'tpre' },
           running
             ? h('button', { class: 'btn', type: 'button', onclick: timerPause }, 'Pause')
