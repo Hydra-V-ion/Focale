@@ -81,6 +81,12 @@ section[data-sec]{display:block}
   body[data-rp=profile] #secWeek{display:none}
 }
 
+/* Minuteur (dans la carte Focus) */
+.timerrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.tout{font-family:var(--mono);font-size:24px;letter-spacing:.02em}
+.tpre{display:flex;gap:6px;flex-wrap:wrap}
+.tpre .btn{min-height:36px;padding:0 12px}
+
 /* Carte Profil */
 .idrow{display:flex;align-items:center;gap:12px;margin-bottom:12px}
 .avatar{width:44px;height:44px;flex:none;display:grid;place-items:center;border:1px solid var(--line2);color:var(--acc);font-family:var(--mono);font-size:18px}
@@ -755,7 +761,9 @@ function renderFocus() {
       sh('Focus'),
       h('div', { class: 'fname empty' }, 'Aucun focus'),
       h('button', { class: 'btn primary', onclick: () => $(n ? '#wheelCard' : '#projCard').scrollIntoView({ behavior: 'smooth', block: 'center' }) },
-        n ? 'Lancer la roue ↓' : 'Ajouter un projet ↓'));
+        n ? 'Lancer la roue ↓' : 'Ajouter un projet ↓'),
+      h('div', { class: 'timerrow', id: 'timerRow' }));
+    renderTimer();
     return;
   }
   const f = state.focus, p = state.projects.find(x => x.id === f.projectId);
@@ -775,8 +783,37 @@ function renderFocus() {
     h('div', { class: 'acts' },
       h('button', { class: 'btn block ' + (state.sessions[k] ? 'ok' : 'primary'), onclick: () => toggleSession() },
         state.sessions[k] ? 'Session validée ✓ · annuler' : 'Valider ma session du jour (30-60 min)')),
-    isBusy(k) ? h('span', { class: 'tag' }, 'Jour occupé' + (state.busy[k] ? ' · ' + state.busy[k] : '')) : null
+    isBusy(k) ? h('span', { class: 'tag' }, 'Jour occupé' + (state.busy[k] ? ' · ' + state.busy[k] : '')) : null,
+    h('div', { class: 'timerrow', id: 'timerRow' })
   );
+  renderTimer();
+}
+
+/* Minuteur libre : accompagne la session, ne rapporte aucun point et n'est pas sauvegardé */
+const timer = { left: 0, endAt: 0 };   // left : ms restantes à l'arrêt ; endAt : heure de fin si en cours
+const timerLeft = () => timer.endAt ? Math.max(0, timer.endAt - Date.now()) : timer.left;
+const fmtTime = ms => { const s = Math.ceil(ms / 1000); return pad(Math.floor(s / 60)) + ':' + pad(s % 60); };
+function timerStart(min) { timer.left = min * 60000; timer.endAt = Date.now() + timer.left; renderTimer(); }
+function timerPause() { timer.left = timerLeft(); timer.endAt = 0; renderTimer(); }
+function timerResume() { timer.endAt = Date.now() + timer.left; renderTimer(); }
+function timerReset() { timer.left = 0; timer.endAt = 0; renderTimer(); }
+function timerTick() {
+  if (!timer.endAt) return;
+  if (timerLeft() > 0) { const o = $('#timerOut'); if (o) o.textContent = fmtTime(timerLeft()); return; }
+  timer.left = 0; timer.endAt = 0; toast('Minuteur terminé'); renderTimer();
+}
+function renderTimer() {
+  const row = $('#timerRow'); if (!row) return;
+  const running = timer.endAt > 0, idle = !running && timer.left === 0;
+  put(row,
+    h('span', { class: 'tout', id: 'timerOut' }, idle ? '--:--' : fmtTime(timerLeft())),
+    idle
+      ? h('div', { class: 'tpre' }, [15, 25, 45].map(n => h('button', { class: 'btn', type: 'button', onclick: () => timerStart(n) }, n + ' min')))
+      : h('div', { class: 'tpre' },
+          running
+            ? h('button', { class: 'btn', type: 'button', onclick: timerPause }, 'Pause')
+            : h('button', { class: 'btn primary', type: 'button', onclick: timerResume }, 'Reprendre'),
+          h('button', { class: 'btn ghost', type: 'button', onclick: timerReset }, 'Arrêter')));
 }
 
 function renderProjects() {
@@ -1362,6 +1399,7 @@ function init() {
   if (newWeek) toast('Nouvelle semaine : la roue est déverrouillée');
   new ResizeObserver(drawWheel).observe($('#wheel'));
   setInterval(tick, 30000);
+  setInterval(timerTick, 1000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { tick(); Sync.run(); } });
   window.addEventListener('focus', tick);
   window.addEventListener('storage', e => { if (e.key === keyFor(activeScope)) { state = loadState(activeScope); renderAll(); } });
