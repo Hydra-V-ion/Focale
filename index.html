@@ -50,10 +50,12 @@ button{cursor:pointer}
 section[data-sec]{display:block}
 .blk{padding:12px;border-bottom:1px solid var(--line)}
 @media (max-width:959px){
+  .ptabs{display:none}
   body:not([data-tab]) section:not([data-sec=focus]),
   body[data-tab=focus] section:not([data-sec=focus]),
   body[data-tab=quests] section:not([data-sec=quests]),
-  body[data-tab=week] section:not([data-sec=week]){display:none}
+  body[data-tab=week] section:not([data-sec=week]),
+  body[data-tab=profile] section:not([data-sec=profile]){display:none}
 }
 @media (min-width:960px){
   .app{display:grid;grid-template-columns:minmax(0,24fr) minmax(0,46fr) minmax(0,30fr);height:calc(100dvh - 48px);min-height:0;padding-bottom:0}
@@ -69,7 +71,20 @@ section[data-sec]{display:block}
   .colC .blk{padding:14px 16px}
   .colC #spinBtn{max-width:640px;margin:0 auto}
   .tabs{display:none!important}
+  /* Onglets par colonne (PC) : le centre reste toujours visible */
+  .ptabs{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2;background:var(--s1)}
+  .ptabs button{flex:1;min-height:32px;background:none;border:1px solid var(--line);border-radius:var(--r);color:var(--mut);font:inherit;font-size:13px;cursor:pointer}
+  .ptabs button[aria-selected=true]{color:var(--tx);border-color:var(--acc)}
+  body:not([data-lp=quest]) #secQuest{display:none}
+  body[data-lp=quest] #secProj{display:none}
+  body:not([data-rp=profile]) #secProf{display:none}
+  body[data-rp=profile] #secWeek{display:none}
 }
+
+/* Carte Profil */
+.idrow{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.avatar{width:44px;height:44px;flex:none;display:grid;place-items:center;border:1px solid var(--line2);color:var(--acc);font-family:var(--mono);font-size:18px}
+.pname{font-weight:600;font-size:15px}
 
 /* En-têtes de section */
 .sh{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:24px;margin-bottom:8px}
@@ -240,7 +255,7 @@ select{appearance:none;padding-right:30px;background:var(--bg) url("data:image/s
 .reasons label b{min-width:52px;font-family:var(--mono);font-size:12px;color:var(--mut);font-weight:500}
 
 /* Navigation mobile */
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(3,1fr);
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(4,1fr);
   background:var(--bg);border-top:1px solid var(--line);padding:0 0 env(safe-area-inset-bottom)}
 .tabs button{background:none;border:0;border-top:2px solid transparent;min-height:56px;color:var(--mut);display:grid;
   gap:2px;justify-items:center;align-content:center;font-size:13px;font-weight:600}
@@ -291,8 +306,12 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
 
 <main class="app">
   <div class="colL">
-    <section data-sec="focus"><div class="blk" id="projCard"></div></section>
-    <section data-sec="quests"><div class="blk" id="questCard"></div></section>
+    <nav class="ptabs" data-attr="lp" aria-label="Projets et quêtes">
+      <button type="button" aria-selected="true" data-v="proj">Projets</button>
+      <button type="button" aria-selected="false" data-v="quest">Quêtes</button>
+    </nav>
+    <section data-sec="focus" id="secProj"><div class="blk" id="projCard"></div></section>
+    <section data-sec="quests" id="secQuest"><div class="blk" id="questCard"></div></section>
   </div>
   <div class="colC">
     <section data-sec="focus">
@@ -309,7 +328,12 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
     </section>
   </div>
   <aside class="colR">
-    <section data-sec="week"><div class="blk" id="weekCard"></div></section>
+    <nav class="ptabs" data-attr="rp" aria-label="Calendrier et profil">
+      <button type="button" aria-selected="true" data-v="week">Calendrier</button>
+      <button type="button" aria-selected="false" data-v="profile">Profil</button>
+    </nav>
+    <section data-sec="week" id="secWeek"><div class="blk" id="weekCard"></div></section>
+    <section data-sec="profile" id="secProf"><div class="blk" id="profCard"></div></section>
   </aside>
 </main>
 
@@ -317,6 +341,7 @@ dialog::backdrop{background:rgba(0,0,0,.72)}
   <button role="tab" data-go="focus"><span class="ic">◎</span>Focus</button>
   <button role="tab" data-go="quests"><span class="ic">✓</span>Quêtes</button>
   <button role="tab" data-go="week"><span class="ic">☾</span>Calendrier</button>
+  <button role="tab" data-go="profile"><span class="ic">◉</span>Profil</button>
 </nav>
 
 <dialog id="dlg"></dialog>
@@ -406,7 +431,9 @@ const defaultState = () => ({
   theme: 'emerald',
   pseudo: '',
   salons: [],
-  history: []              // anciens focus {week,name}
+  history: [],             // anciens focus {week,name}
+  tasks: [],               // {id,name}  tâches rapides à faire (1 pt chacune)
+  merit: []                // {id,name,at}  tâches rapides archivées : total Mérite (hors classement)
 });
 
 function normalize(s) {
@@ -426,6 +453,10 @@ function normalize(s) {
   out.salons = Array.isArray(s.salons) ? s.salons.filter(c => /^[A-Z0-9]{6}$/.test(c)).slice(0, 10) : [];
   out.updatedAt = Number(s.updatedAt) || 0;
   out.history = Array.isArray(s.history) ? s.history.slice(-52) : [];
+  out.tasks = (Array.isArray(s.tasks) ? s.tasks : []).filter(t => t && t.name != null)
+    .map(t => ({ id: String(t.id || uid()), name: String(t.name).slice(0, 80) }));
+  out.merit = (Array.isArray(s.merit) ? s.merit : []).filter(t => t && t.name != null)
+    .map(t => ({ id: String(t.id || uid()), name: String(t.name), at: t.at || today() }));
   return out;
 }
 
@@ -455,7 +486,7 @@ function save(touch = true, push = true) {
   if (touch) state.updatedAt = Date.now();
   try { localStorage.setItem(keyFor(activeScope), JSON.stringify(state)); }
   catch (e) { toast('Stockage local indisponible'); }
-  renderOnboarding();
+  renderOnboarding(); renderProfile();
   if (push) Sync.schedulePush();
 }
 
@@ -665,6 +696,14 @@ function toggleQuest(id) {
   save(); renderQuests();
 }
 
+/* Tâche rapide : terminée = archivée et comptée dans le total Mérite (pas de jour, pas de classement) */
+function completeTask(id) {
+  const t = state.tasks.find(x => x.id === id); if (!t) return;
+  state.tasks = state.tasks.filter(x => x.id !== id);
+  state.merit.push({ id: t.id, name: t.name, at: today() });
+  save(); renderQuests(); renderWeek();
+}
+
 function toggleBusy(k) {
   if (isBusy(k)) delete state.busy[k]; else state.busy[k] = '';
   save(); renderAll();
@@ -807,7 +846,18 @@ function renderQuests() {
     } },
       h('input', { name: 'n', type: 'text', placeholder: 'Nouvelle quête', maxLength: 80, 'aria-label': 'Nouvelle quête' }),
       h('select', { name: 'f', 'aria-label': 'Fréquence' }, h('option', { value: 'daily' }, 'Quotidienne'), h('option', { value: 'weekly' }, 'Hebdo')),
-      h('button', { class: 'btn primary sq', type: 'submit', 'aria-label': 'Ajouter la quête' }, '+'))
+      h('button', { class: 'btn primary sq', type: 'submit', 'aria-label': 'Ajouter la quête' }, '+')),
+    h('div', { class: 'grp' }, 'Tâches rapides · 1 pt'),
+    state.tasks.length ? h('ul', { class: 'rows' }, state.tasks.map(t => h('li', { class: 'qrow' },
+      h('button', { class: 'check', role: 'checkbox', 'aria-checked': 'false', 'aria-label': 'Terminer « ' + t.name + ' »', onclick: () => completeTask(t.id) }, ''),
+      h('div', { class: 'grow' }, h('input', { type: 'text', class: 'flat', value: t.name, 'aria-label': 'Nom de la tâche', oninput: e => { t.name = e.target.value; save(); } })),
+      h('button', { class: 'del', 'aria-label': 'Supprimer la tâche', onclick: () => { state.tasks = state.tasks.filter(x => x.id !== t.id); save(); renderQuests(); } }, '✕')))) : null,
+    h('form', { class: 'addrow', onsubmit: e => {
+      e.preventDefault(); const v = e.target.elements.n.value.trim(); if (!v) return;
+      state.tasks.push({ id: uid(), name: v }); save(); renderQuests();
+    } },
+      h('input', { name: 'n', type: 'text', placeholder: 'Tâche rapide', maxLength: 80, 'aria-label': 'Nouvelle tâche rapide' }),
+      h('button', { class: 'btn primary sq', type: 'submit', 'aria-label': 'Ajouter la tâche rapide' }, '+'))
   );
 }
 
@@ -854,6 +904,30 @@ function toggleSession(k = today()) {
   save(); renderFocus(); renderWeek();
 }
 
+/* Profil : identité, totaux personnels (Mérite inclus, hors classement) */
+function firstDay() {
+  const ks = [...Object.keys(state.sessions), ...Object.keys(state.busy), ...state.quests.map(q => q.created), ...state.merit.map(t => t.at)]
+    .filter(k => typeof k === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+  return ks[0] || today();
+}
+function renderProfile() {
+  const box = $('#profCard'); if (!box) return;
+  const pseudo = state.pseudo.trim(), u = Auth.user;
+  const [fy, fm, fd] = firstDay().split('-');
+  const badge = badgeOf(weekSessions(mondayOf(new Date())));
+  put(box,
+    sh('Profil', h('span', { class: 'cnt' }, u ? 'Compte Google' : 'Mode local')),
+    h('div', { class: 'idrow' },
+      h('span', { class: 'avatar', 'aria-hidden': 'true' }, (pseudo || '?').charAt(0).toUpperCase()),
+      h('div', { class: 'grow' },
+        h('div', { class: 'pname' }, pseudo || 'Sans pseudo'),
+        h('div', { class: 'mut small' }, `Depuis le ${+fd} ${MONTHS[+fm - 1]} ${fy}`)),
+      h('button', { class: 'btn ghost', type: 'button', onclick: openData }, 'Modifier')),
+    badge ? h('div', { class: 'badgerow' }, h('span', { class: 'badge' }, 'Semaine · ' + badge)) : null,
+    statsBox(),
+    h('p', { class: 'mut small', style: 'margin:0' }, `Salons : ${state.salons.length ? state.salons.join(', ') : 'aucun'}`));
+}
+
 function renderWeek() {
   const box = $('#weekCard'); if (!box) return;
   const y = viewMonth.getFullYear(), m = viewMonth.getMonth(), t = today();
@@ -874,7 +948,6 @@ function renderWeek() {
     badge ? h('div', { class: 'badgerow' }, h('span', { class: 'badge' }, 'Semaine · ' + badge)) : null,
     h('div', { class: 'mgrid' }, ['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(x => h('span', { class: 'mdow' }, x)), cells),
     dayPanel(selDay),
-    statsBox(),
     boardBox());
   Salons.refresh();
 }
@@ -927,8 +1000,7 @@ function statsBox() {
   for (let i = 11; i >= 0; i--) { const d = new Date(y, m - i, 1); months.push({ label: MONTHS[d.getMonth()].slice(0, 3), pts: monthPoints(d.getFullYear(), d.getMonth()) }); }
   const max = Math.max(1, ...months.map(x => x.pts));
   const tile = (label, value) => h('div', { class: 'tile' }, h('span', { class: 'tl' }, label), h('span', { class: 'tv' }, String(value)));
-  return h('details', { class: 'stats', open: statsOpen, ontoggle: e => { statsOpen = e.target.open; } },
-    h('summary', {}, 'Statistiques'),
+  return h('div', { class: 'stats' },
     h('div', { class: 'tiles' },
       tile('Points ce mois', monthPoints(y, m)),
       tile('Points au total', totalPoints()),
@@ -937,6 +1009,7 @@ function statsBox() {
       tile('Série en cours', cur + ' j'),
       tile('Meilleure série', best + ' j'),
       tile('Quêtes faites', questDone),
+      tile('Mérite total', state.merit.length),
       tile('Jours occupés', Object.keys(state.busy).length)),
     h('div', { class: 'bars' },
       h('span', { class: 'lbl' }, 'Points par mois (12 derniers)'),
@@ -1041,7 +1114,7 @@ function applyTheme(name) {
 
 function renderAll() {
   applyTheme(state.theme);
-  renderFocus(); renderProjects(); renderQuests(); renderWeek(); renderOnboarding(); updateWheelUI();
+  renderFocus(); renderProjects(); renderQuests(); renderWeek(); renderOnboarding(); renderProfile(); updateWheelUI();
   requestAnimationFrame(drawWheel);
 }
 
@@ -1277,8 +1350,13 @@ function init() {
   $('#spinBtn').addEventListener('click', spin);
   $('#dataBtn').addEventListener('click', openData);
   $$('.tabs button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.go)));
+  /* Onglets de colonne (PC) */
+  $$('.ptabs').forEach(nav => nav.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    document.body.dataset[nav.dataset.attr] = b.dataset.v;
+    nav.querySelectorAll('button').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+  })));
   let t0 = 'focus'; try { t0 = localStorage.getItem(LS_TAB) || 'focus'; } catch (e) {}
-  setTab(['focus', 'quests', 'week'].includes(t0) ? t0 : 'focus');
+  setTab(['focus', 'quests', 'week', 'profile'].includes(t0) ? t0 : 'focus');
   const newWeek = rollover();
   renderAll();
   if (newWeek) toast('Nouvelle semaine : la roue est déverrouillée');
