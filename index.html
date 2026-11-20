@@ -51,6 +51,8 @@ section[data-sec]{display:block}
 .blk{padding:12px;border-bottom:1px solid var(--line)}
 @media (max-width:959px){
   .ptabs{display:none}
+  /* Bandeau sous la barre d'état : le navigateur dessine la page derrière elle */
+  .top{box-sizing:border-box;height:calc(48px + max(env(safe-area-inset-top),40px));padding-top:max(env(safe-area-inset-top),40px)}
   body:not([data-tab]) section:not([data-sec=focus]),
   body[data-tab=focus] section:not([data-sec=focus]),
   body[data-tab=quests] section:not([data-sec=quests]),
