@@ -1,8 +1,8 @@
 # Focale
 
-> Un focus par semaine, des micro-habitudes.
+Un focus par semaine, des micro-habitudes.
 
-Lien : https://hydra-v-ion.github.io/Focale/
+**Lien :** https://hydra-v-ion.github.io/Focale/
 
 > Projet vibecodé : l'application a été écrite avec l'aide d'une IA (Claude), à partir d'idées et d'itérations successives.
 
